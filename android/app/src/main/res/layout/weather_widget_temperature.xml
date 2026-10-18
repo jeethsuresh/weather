@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/widget_root" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/widget_background" android:importantForAccessibility="yes" android:orientation="vertical" android:gravity="center" android:padding="6dp">
+<ImageView android:id="@+id/weather_icon" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:src="@drawable/widget_partly" android:scaleType="fitCenter" android:importantForAccessibility="no" />
+<TextView android:id="@+id/temperature" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:gravity="center" android:text="16°" android:textSize="28sp" android:textColor="#FFFFFF" android:fontFamily="sans-serif-light" android:includeFontPadding="false" android:maxLines="1" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="12sp" android:autoSizeMaxTextSize="30sp" android:autoSizeStepGranularity="1sp" />
+</LinearLayout>

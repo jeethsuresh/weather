@@ -22,6 +22,8 @@ class Place {
     required this.timezone,
     this.region = '',
     this.canadaSite,
+    this.isCurrentLocation = false,
+    this.accuracyMeters,
   });
   static const toronto = Place(
     name: 'Toronto',
@@ -35,6 +37,8 @@ class Place {
   final String name, country, timezone, region;
   final String? canadaSite;
   final double latitude, longitude;
+  final bool isCurrentLocation;
+  final double? accuracyMeters;
   String get id =>
       '${latitude.toStringAsFixed(3)},${longitude.toStringAsFixed(3)}';
   String get subtitle =>
@@ -55,6 +59,8 @@ class Place {
     'timezone': timezone,
     'region': region,
     'canadaSite': canadaSite,
+    'isCurrentLocation': isCurrentLocation,
+    'accuracyMeters': accuracyMeters,
   };
   factory Place.fromJson(Json j) => Place(
     name: j['name'],
@@ -64,6 +70,8 @@ class Place {
     timezone: j['timezone'] ?? 'UTC',
     region: j['region'] ?? '',
     canadaSite: j['canadaSite'],
+    isCurrentLocation: j['isCurrentLocation'] ?? false,
+    accuracyMeters: number(j['accuracyMeters']),
   );
 }
 
@@ -150,15 +158,17 @@ class DayForecast {
     this.high,
     this.low,
     this.rain,
+    this.windMax,
   });
   final String label, summary;
-  final double? high, low, rain;
+  final double? high, low, rain, windMax;
   Json toJson() => {
     'label': label,
     'summary': summary,
     'high': high,
     'low': low,
     'rain': rain,
+    'windMax': windMax,
   };
   factory DayForecast.fromJson(Json j) => DayForecast(
     label: j['label'],
@@ -166,6 +176,7 @@ class DayForecast {
     high: number(j['high']),
     low: number(j['low']),
     rain: number(j['rain']),
+    windMax: number(j['windMax']),
   );
 }
 

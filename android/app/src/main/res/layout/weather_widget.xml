@@ -1,39 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/widget_root" android:layout_width="match_parent" android:layout_height="match_parent"
-    android:orientation="vertical" android:background="@drawable/widget_background">
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
-        <TextView android:id="@+id/place" android:layout_width="0dp" android:layout_weight="1"
-            android:layout_height="wrap_content" android:text="Daybreak" android:textSize="14sp"
-            android:textColor="#FFFFFF" android:fontFamily="sans-serif-medium" android:maxLines="1" android:ellipsize="end" />
-        <TextView android:id="@+id/updated" android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="Tap to set up" android:textSize="9sp" android:textColor="#AAC5B9" />
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/widget_root" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/widget_background" android:importantForAccessibility="yes" android:orientation="vertical" android:padding="10dp">
+    <TextView android:id="@+id/place" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Daybreak" android:textSize="11sp" android:textColor="#E4EEE5" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:gravity="center_vertical">
+        <TextView android:id="@+id/temperature" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" android:text="16°" android:gravity="center_vertical" android:textSize="36sp" android:textColor="#FFFFFF" android:fontFamily="sans-serif-light" android:includeFontPadding="false" android:maxLines="1" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="18sp" android:autoSizeMaxTextSize="40sp" android:autoSizeStepGranularity="1sp" />
+        <ImageView android:id="@+id/weather_icon" android:layout_width="36dp" android:layout_height="match_parent" android:src="@drawable/widget_partly" android:scaleType="fitCenter" android:importantForAccessibility="no" />
     </LinearLayout>
-    <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
-        android:orientation="horizontal" android:gravity="center_vertical">
-        <TextView android:id="@+id/temperature" android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="—" android:textSize="46sp" android:textColor="#FFFFFF" android:fontFamily="sans-serif-light" />
-        <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
-            android:orientation="vertical" android:paddingStart="12dp">
-            <TextView android:id="@+id/condition" android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:text="Open Daybreak" android:textSize="12sp" android:textColor="#E4EEE5" android:maxLines="2" android:ellipsize="end" />
-            <TextView android:id="@+id/feels_like" android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:textSize="10sp" android:textColor="#AAC5B9" android:layout_marginTop="3dp" />
+    <TextView android:id="@+id/condition" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Partly cloudy" android:textSize="11sp" android:textColor="#E4EEE5" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingTop="6dp" android:paddingBottom="5dp">
+        <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Wind" android:textSize="9sp" android:textColor="#AAC5B9" android:includeFontPadding="false" />
+            <TextView android:id="@+id/wind" android:layout_width="match_parent" android:layout_height="17dp" android:text="12 km/h" android:textSize="12sp" android:fontFamily="sans-serif-medium" android:textColor="#FFFFFF" android:includeFontPadding="false" android:gravity="center_vertical" android:maxLines="1" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="9sp" android:autoSizeMaxTextSize="12sp" android:autoSizeStepGranularity="1sp" />
         </LinearLayout>
-        <TextView android:id="@+id/weather_symbol" android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="☀" android:textSize="40sp" android:textColor="#F7C78C" android:importantForAccessibility="no" />
+        <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="4dp">
+            <TextView android:id="@+id/precipitation_label" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Precip · 3pm" android:textSize="9sp" android:textColor="#AAC5B9" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" />
+            <TextView android:id="@+id/precipitation" android:layout_width="match_parent" android:layout_height="17dp" android:text="20%" android:textSize="12sp" android:fontFamily="sans-serif-medium" android:textColor="#FFFFFF" android:includeFontPadding="false" android:gravity="center_vertical" />
+        </LinearLayout>
     </LinearLayout>
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal"
-        android:paddingTop="4dp" android:paddingBottom="7dp">
-        <TextView android:id="@+id/hour_1" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
-            android:text="—" android:textColor="#E4EEE5" android:textSize="10sp" />
-        <TextView android:id="@+id/hour_2" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
-            android:text="—" android:textColor="#E4EEE5" android:textSize="10sp" />
-        <TextView android:id="@+id/hour_3" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
-            android:text="—" android:textColor="#E4EEE5" android:textSize="10sp" />
-        <TextView android:id="@+id/hour_4" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
-            android:text="—" android:textColor="#E4EEE5" android:textSize="10sp" />
-    </LinearLayout>
-    <TextView android:id="@+id/source" android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:text="DAYBREAK" android:textSize="9sp" android:textColor="#AAC5B9" android:letterSpacing="0.05" />
+    <TextView android:id="@+id/updated" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Updated now" android:textSize="9sp" android:textColor="#AAC5B9" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" />
 </LinearLayout>

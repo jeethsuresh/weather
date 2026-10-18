@@ -11,10 +11,8 @@ import 'ui/weather_screen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   tzdata.initializeTimeZones();
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
+  // Let the current display choose its orientation when the phone opens/closes.
+  await SystemChrome.setPreferredOrientations([]);
   // The forecast screen stays usable even if Android declines background setup.
   try {
     await Workmanager().initialize(callbackDispatcher);
@@ -53,7 +51,7 @@ class _DaybreakAppState extends State<DaybreakApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && controller.initialized) {
       // A background isolate may have refreshed while the app was suspended.
-      unawaited(controller.refresh());
+      unawaited(controller.resume());
     }
   }
 

@@ -5,50 +5,76 @@ import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
-import android.os.Bundle
 import android.graphics.Color
+import android.os.Bundle
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetProvider
 import org.json.JSONObject
 
-/** Renders only the last saved forecast. Network refreshes run in WorkManager. */
-class WeatherWidgetProvider : HomeWidgetProvider() {
+// Keep the original receiver name so installed widgets survive an app update.
+class WeatherWidgetProvider : CachedWeatherWidget(R.layout.weather_widget, true)
+class TemperatureWidgetProvider : CachedWeatherWidget(R.layout.weather_widget_temperature)
+class SummaryWidgetProvider : CachedWeatherWidget(R.layout.weather_widget_summary)
+
+/** Every size reads the same local snapshot. Only WorkManager fetches weather. */
+abstract class CachedWeatherWidget(
+    private val layout: Int,
+    private val details: Boolean = false,
+) : HomeWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray,
                           widgetData: SharedPreferences) {
         val data = try { JSONObject(widgetData.getString("weather", "{}") ?: "{}") }
                    catch (_: Exception) { JSONObject() }
+        val now = System.currentTimeMillis()
+        val fetchedAt = data.optLong("fetchedAt", 0)
+        val observedAt = data.optLong("observedAt", 0)
+        val minutes = ((now - fetchedAt) / 60000).coerceAtLeast(0)
+        val stale = fetchedAt > 0 && (minutes >= 120 ||
+            (observedAt > 0 && now - observedAt > 10800000))
+        val age = when {
+            fetchedAt == 0L -> "Tap to set up"
+            minutes < 1 -> "Updated now"
+            minutes < 60 -> "Updated ${minutes}m ago"
+            minutes < 1440 -> "${minutes / 60}h old"
+            else -> "${minutes / 1440}d old"
+        }
+        val temperature = data.optString("temperature", "—")
+        val summary = data.optString("summary", "Tap to set up")
+        val hours = data.optJSONArray("hours")
+        // Advance the next-hour chance during native redraws, even when offline.
+        // Never substitute a distant hour or a missing probability with zero.
+        val nextHour = (0 until (hours?.length() ?: 0))
+            .mapNotNull { hours?.optJSONObject(it) }
+            .filter { it.optLong("timestamp") > now - 1800000 &&
+                it.optLong("timestamp") <= now + 5400000 }
+            .minByOrNull { it.optLong("timestamp") }
+        val rain = if (nextHour == null || nextHour.isNull("rain")) "—"
+                   else nextHour.optString("rain", "—")
+        val rainLabel = if (nextHour == null) "Precip · next hr"
+                        else "Precip · ${nextHour.optString("time")}"
         for (id in ids) {
-            val views = RemoteViews(context.packageName, R.layout.weather_widget)
-            views.setTextViewText(R.id.place, data.optString("place", "Daybreak"))
-            views.setTextViewText(R.id.temperature, data.optString("temperature", "—"))
-            views.setTextViewText(R.id.condition, data.optString("summary", "Open Daybreak to get a forecast"))
-            views.setTextViewText(R.id.feels_like, data.optString("feelsLike", ""))
-            views.setTextViewText(R.id.weather_symbol, symbol(data.optString("kind")))
-            views.setTextViewText(R.id.source, data.optString("source", "Daybreak"))
-            val fetchedAt = data.optLong("fetchedAt", 0)
-            val observedAt = data.optLong("observedAt", 0)
-            val minutes = ((System.currentTimeMillis() - fetchedAt) / 60000).coerceAtLeast(0)
-            val stale = minutes >= 120 || (observedAt > 0 && System.currentTimeMillis() - observedAt > 10800000)
-            val age = when {
-                fetchedAt == 0L -> "Tap to set up"
-                minutes < 1 -> "Updated now"
-                minutes < 60 -> "Updated ${minutes}m ago"
-                minutes < 1440 -> "${minutes / 60}h old"
-                else -> "${minutes / 1440}d old"
+            val views = RemoteViews(context.packageName, layout)
+            views.setTextViewText(R.id.temperature, temperature)
+            views.setTextColor(R.id.temperature, Color.parseColor(if (stale) "#FFD29C" else "#FFFFFF"))
+            views.setImageViewResource(R.id.weather_icon, icon(data.optString("kind")))
+            if (layout != R.layout.weather_widget_temperature) {
+                views.setTextViewText(R.id.condition, summary)
             }
-            views.setTextViewText(R.id.updated, if (stale) "Saved · $age" else age)
-            views.setTextColor(R.id.updated, Color.parseColor(if (stale) "#FFD29C" else "#AAC5B9"))
-            val hourIds = intArrayOf(R.id.hour_1, R.id.hour_2, R.id.hour_3, R.id.hour_4)
-            val hours = data.optJSONArray("hours")
-            val upcoming = (0 until (hours?.length() ?: 0)).mapNotNull { hours?.optJSONObject(it) }
-                .filter { it.optLong("timestamp") > System.currentTimeMillis() - 1800000 }
-                .take(4)
-            for (i in hourIds.indices) {
-                val hour = upcoming.getOrNull(i)
-                // Do not leave expired forecast hours looking current after a long offline period.
-                views.setTextViewText(hourIds[i], if (hour == null || minutes > 1440) "—"
-                    else "${hour.optString("time")}  ${hour.optString("temperature")}")
+            if (details) {
+                views.setTextViewText(R.id.place, data.optString("place", "Daybreak"))
+                views.setTextViewText(R.id.wind, data.optString("wind", "—"))
+                views.setTextViewText(R.id.precipitation, rain)
+                views.setTextViewText(R.id.precipitation_label, rainLabel)
+                views.setTextViewText(R.id.updated, if (stale) "Saved · $age" else age)
+                views.setTextColor(R.id.updated, Color.parseColor(if (stale) "#FFD29C" else "#AAC5B9"))
             }
+            val description = buildString {
+                append("${data.optString("place", "Daybreak")}, ${temperature.removeSuffix("°")} degrees ${data.optString("unit")}, $summary. ")
+                if (details) append("Wind ${data.optString("wind", "not reported")}. $rainLabel, $rain chance. ")
+                append(if (stale) "Saved weather. $age. " else "$age. ")
+                append("${data.optString("source", "Daybreak")}. Tap to open Daybreak.")
+            }
+            views.setContentDescription(R.id.widget_root, description)
             val launch = Intent(context, MainActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             val click = PendingIntent.getActivity(context, id, launch,
@@ -64,12 +90,14 @@ class WeatherWidgetProvider : HomeWidgetProvider() {
         onUpdate(context, manager, intArrayOf(id))
     }
 
-    private fun symbol(kind: String) = when (kind) {
-        "sun" -> "☀"
-        "partly", "cloud" -> "☁"
-        "snow" -> "❄"
-        "rain", "storm" -> "☂"
-        "fog" -> "≋"
-        else -> "°"
+    private fun icon(kind: String) = when (kind) {
+        "sun" -> R.drawable.widget_sun
+        "partly" -> R.drawable.widget_partly
+        "cloud" -> R.drawable.widget_cloud
+        "rain" -> R.drawable.widget_rain
+        "storm" -> R.drawable.widget_storm
+        "snow" -> R.drawable.widget_snow
+        "fog" -> R.drawable.widget_fog
+        else -> R.drawable.widget_unknown
     }
 }

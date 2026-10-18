@@ -11,7 +11,9 @@ class MainActivity : FlutterActivity() {
         super.configureFlutterEngine(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "dev.jeeth.daybreak/actions")
             .setMethodCallHandler { call, result ->
-                if (call.method != "openLink") {
+                if (call.method == "timeZone") {
+                    result.success(java.util.TimeZone.getDefault().id)
+                } else if (call.method != "openLink") {
                     result.notImplemented()
                 } else {
                     val uri = Uri.parse(call.argument<String>("url") ?: "")

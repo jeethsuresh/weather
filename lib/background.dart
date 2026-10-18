@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/widgets.dart';
 import 'package:home_widget/home_widget.dart';
-import 'package:intl/intl.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:workmanager/workmanager.dart';
 import 'models.dart';
 import 'repository.dart';
+import 'widget_data.dart';
 
 const refreshJob = 'dev.jeeth.daybreak.hourly';
 
@@ -60,36 +60,9 @@ Future<void> publishWidget(
   if (current.cacheKey != s.cacheKey || current.fahrenheit != s.fahrenheit) {
     return;
   }
-  final now = DateTime.now();
-  final payload = <String, dynamic>{
-    'place': s.place.name,
-    'unit': s.fahrenheit ? 'F' : 'C',
-    'temperature': s.temperature(f?.temperature),
-    'summary': f?.summary ?? 'Open Daybreak to get a forecast',
-    'feelsLike':
-        f?.feelsLike == null ? '' : 'Feels like ${s.temperature(f!.feelsLike)}',
-    'source': f?.source.label ?? 'Daybreak',
-    'fetchedAt': f?.fetchedAt.millisecondsSinceEpoch ?? 0,
-    'observedAt': f?.observedAt.millisecondsSinceEpoch ?? 0,
-    'stale': f?.staleAt(now) ?? false,
-    'hours':
-        f
-            ?.upcoming(now)
-            .map(
-              (h) => {
-                'timestamp': h.time.millisecondsSinceEpoch,
-                'time':
-                    DateFormat(
-                      'ha',
-                    ).format(s.place.local(h.time)).toLowerCase(),
-                'temperature': s.temperature(h.temperature),
-                'kind': conditionKind(h.summary),
-              },
-            )
-            .toList() ??
-        [],
-    'kind': conditionKind(f?.summary ?? ''),
-  };
+  final payload = widgetPayload(s, f, DateTime.now());
   await HomeWidget.saveWidgetData<String>('weather', jsonEncode(payload));
-  await HomeWidget.updateWidget(androidName: 'WeatherWidgetProvider');
+  for (final provider in widgetProviders) {
+    await HomeWidget.updateWidget(androidName: provider);
+  }
 }

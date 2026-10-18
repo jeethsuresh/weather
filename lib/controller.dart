@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'models.dart';
 import 'repository.dart';
+import 'location.dart';
 
 typedef WidgetPublisher =
     Future<void> Function(WeatherRepository, Settings, Forecast?);
@@ -11,9 +12,15 @@ class WeatherController extends ChangeNotifier {
     this.repository, {
     required this.publish,
     required this.schedule,
-  });
+    LocationLookup? locationLookup,
+  }) : locationLookup = locationLookup ?? DeviceLocationLookup(repository.api);
   final WeatherRepository repository;
   final WidgetPublisher publish;
+  final LocationLookup locationLookup;
+  bool locating = false;
+  String? locationError;
+  LocationIssue? locationIssue;
+  int _locationRevision = 0;
   final Future<void> Function(bool) schedule;
   Settings settings = const Settings();
   Forecast? forecast;
@@ -72,6 +79,12 @@ class WeatherController extends ChangeNotifier {
   }
 
   Future<void> update(Settings value) async {
+    if (value.place.id != settings.place.id ||
+        value.place.isCurrentLocation != settings.place.isCurrentLocation) {
+      ++_locationRevision;
+      locationError = null;
+      locationIssue = null;
+    }
     final weatherChanged = value.cacheKey != settings.cacheKey;
     final revision = ++_revision;
     settings = value;
@@ -98,6 +111,43 @@ class WeatherController extends ChangeNotifier {
     } catch (_) {
       backgroundError =
           'The widget could not be updated. Your forecast is still available here.';
+    }
+  }
+
+  Future<bool> useCurrentLocation({bool requestPermission = true}) async {
+    if (locating) return false;
+    final revision = ++_locationRevision;
+    locating = true;
+    locationError = null;
+    locationIssue = null;
+    _notify();
+    try {
+      final place = await locationLookup.locate(
+        requestPermission: requestPermission,
+      );
+      if (_disposed || revision != _locationRevision) return false;
+      await update(settings.copyWith(place: place, source: WeatherSource.auto));
+      return true;
+    } on LocationFailure catch (failure) {
+      if (_disposed || revision != _locationRevision) return false;
+      locationError = failure.message;
+      locationIssue = failure.issue;
+    } catch (_) {
+      if (_disposed || revision != _locationRevision) return false;
+      locationError =
+          'Couldn’t get your location. Your saved area is unchanged.';
+      locationIssue = LocationIssue.unavailable;
+    } finally {
+      locating = false;
+      _notify();
+    }
+    return false;
+  }
+
+  Future<void> resume() async {
+    await refresh();
+    if (!_disposed && settings.place.isCurrentLocation) {
+      await useCurrentLocation(requestPermission: false);
     }
   }
 

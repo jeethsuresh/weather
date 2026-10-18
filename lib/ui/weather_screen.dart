@@ -6,22 +6,10 @@ import 'package:home_widget/home_widget.dart';
 import 'package:intl/intl.dart';
 import '../controller.dart';
 import '../models.dart';
+import '../location.dart';
 
-const ink = Color(0xff193b38);
-const muted = Color(0xff6c827a);
-const mint = Color(0xffe4eee5);
-const orange = Color(0xffef9c53);
-
-IconData weatherIcon(String summary) => switch (conditionKind(summary)) {
-  'storm' => Icons.thunderstorm_outlined,
-  'snow' => Icons.ac_unit,
-  'rain' => Icons.water_drop_outlined,
-  'fog' => Icons.foggy,
-  'cloud' => Icons.cloud_outlined,
-  'partly' => Icons.wb_cloudy_outlined,
-  'sun' => Icons.wb_sunny_outlined,
-  _ => Icons.thermostat_outlined,
-};
+import 'compact_weather.dart';
+import 'weather_style.dart';
 
 class WeatherScreen extends StatelessWidget {
   const WeatherScreen({super.key, required this.controller});
@@ -50,6 +38,13 @@ class WeatherScreen extends StatelessWidget {
       final f = controller.forecast;
       final now = DateTime.now();
       final hours = f?.upcoming(now) ?? [];
+      if (useCompactWeatherLayout(MediaQuery.sizeOf(context))) {
+        return CompactWeatherView(
+          controller: controller,
+          onPlaces: () => _places(context),
+          onSettings: () => _settings(context),
+        );
+      }
       return Scaffold(
         body: SafeArea(
           bottom: false,
@@ -988,28 +983,40 @@ class _PlaceSheetState extends State<PlaceSheet> {
   Widget build(BuildContext context) {
     final places =
         input.text.trim().length < 2 || error != null ? suggested : results;
+    final media = MediaQuery.of(context);
+    final available = math.max(
+      0.0,
+      media.size.height - media.viewInsets.bottom - media.padding.top - 44,
+    );
     return Padding(
-      padding: EdgeInsets.fromLTRB(
-        24,
-        0,
-        24,
-        MediaQuery.viewInsetsOf(context).bottom + 24,
-      ),
+      padding: EdgeInsets.fromLTRB(20, 0, 20, media.viewInsets.bottom),
       child: SizedBox(
-        height: math.min(520, MediaQuery.sizeOf(context).height * .75),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        height: math.min(520.0, available),
+        child: ListView(
+          key: const ValueKey('city-search-scroll'),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: const EdgeInsets.only(bottom: 20),
           children: [
-            const Text(
+            Text(
               'Find your sky',
-              style: TextStyle(fontSize: 27, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: available < 300 ? 21 : 27,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'Choose a city. No location permission needed.',
-              style: TextStyle(color: muted, fontSize: 12),
+            if (available >= 300) ...[
+              const SizedBox(height: 8),
+              const Text(
+                'Use your location, or choose a city.',
+                style: TextStyle(color: muted, fontSize: 12),
+              ),
+            ],
+            const SizedBox(height: 10),
+            _LocationChoice(
+              controller: widget.controller,
+              onSelected: () => Navigator.pop(context),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
             TextField(
               controller: input,
               onChanged: search,
@@ -1033,7 +1040,7 @@ class _PlaceSheetState extends State<PlaceSheet> {
                         : null,
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 10),
             if (error != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
@@ -1047,32 +1054,25 @@ class _PlaceSheetState extends State<PlaceSheet> {
                 padding: EdgeInsets.all(20),
                 child: Text('No cities found. Try a nearby larger city.'),
               ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: places.length,
-                itemBuilder: (_, i) {
-                  final p = places[i];
-                  return ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.location_city_outlined),
-                    title: Text(p.name),
-                    subtitle: Text(p.subtitle),
-                    trailing: const Icon(Icons.north_east, size: 18),
-                    onTap: () {
-                      Navigator.pop(context);
-                      unawaited(
-                        widget.controller.update(
-                          widget.controller.settings.copyWith(
-                            place: p,
-                            source: WeatherSource.auto,
-                          ),
-                        ),
-                      );
-                    },
+            for (final place in places)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.location_city_outlined),
+                title: Text(place.name),
+                subtitle: Text(place.subtitle),
+                trailing: const Icon(Icons.north_east, size: 18),
+                onTap: () {
+                  Navigator.pop(context);
+                  unawaited(
+                    widget.controller.update(
+                      widget.controller.settings.copyWith(
+                        place: place,
+                        source: WeatherSource.auto,
+                      ),
+                    ),
                   );
                 },
               ),
-            ),
             const Text(
               'City search by Open-Meteo / GeoNames',
               style: TextStyle(fontSize: 10, color: muted),
@@ -1091,6 +1091,25 @@ class SettingsSheet extends StatelessWidget {
     await const MethodChannel(
       'dev.jeeth.daybreak/actions',
     ).invokeMethod<void>('openLink', {'url': url});
+  }
+
+  Future<void> addWidget(BuildContext context, String provider) async {
+    try {
+      if (await HomeWidget.isRequestPinWidgetSupported() != true) {
+        throw UnsupportedError('Launcher pinning unavailable');
+      }
+      await HomeWidget.requestPinWidget(androidName: provider);
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Long-press your home screen, choose Widgets, then Daybreak.',
+            ),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -1117,7 +1136,9 @@ class SettingsSheet extends StatelessWidget {
                   'A small forecast. A lighter footprint.',
                   style: TextStyle(color: muted, fontSize: 12),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 18),
+                _LocationChoice(controller: controller),
+                const SizedBox(height: 12),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   title: const Text('Fahrenheit'),
@@ -1173,27 +1194,49 @@ class SettingsSheet extends StatelessWidget {
                             },
                   ),
                 const Divider(height: 36),
-                OutlinedButton.icon(
-                  icon: const Icon(Icons.widgets_outlined),
-                  label: const Text('Add home-screen widget'),
-                  onPressed: () async {
-                    try {
-                      await HomeWidget.requestPinWidget(
-                        androidName: 'WeatherWidgetProvider',
-                      );
-                    } catch (_) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Long-press your home screen, choose Widgets, then Daybreak.',
-                            ),
-                          ),
-                        );
-                      }
-                    }
-                  },
+                const Text(
+                  'Home-screen widgets',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 ),
+                const SizedBox(height: 8),
+                for (final option in const [
+                  ('1×1', 'Temperature + icon', 'TemperatureWidgetProvider'),
+                  (
+                    '2×1',
+                    'Temperature, icon + weather',
+                    'SummaryWidgetProvider',
+                  ),
+                  (
+                    '2×2',
+                    'Weather, wind + precipitation',
+                    'WeatherWidgetProvider',
+                  ),
+                ])
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Container(
+                      width: 48,
+                      height: 40,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: ink,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        option.$1,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                    title: Text(
+                      option.$2,
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                    trailing: const Icon(Icons.add_circle_outline, size: 22),
+                    onTap: () => addWidget(context, option.$3),
+                  ),
                 const SizedBox(height: 24),
                 const Text(
                   'Your phone is the whole app',
@@ -1202,7 +1245,7 @@ class SettingsSheet extends StatelessWidget {
                 const SizedBox(height: 8),
                 const Text(
                   'No account, ads, analytics, or app server. Settings and forecasts are stored locally and excluded from Android backup. '
-                  'Forecast coordinates go directly to the selected weather service; city searches go to Open-Meteo. No GPS permission is requested.',
+                  'Forecast coordinates go directly to the selected weather service; city searches and location timezone lookup go to Open-Meteo. Area names use Android’s geocoder. Location is optional and requested only while the app is in use. The saved area is used for background weather checks.',
                   style: TextStyle(color: muted, fontSize: 12, height: 1.6),
                 ),
                 const SizedBox(height: 16),
@@ -1238,7 +1281,7 @@ class SettingsSheet extends StatelessWidget {
                 const SizedBox(height: 16),
                 const Center(
                   child: Text(
-                    'DAYBREAK  /  1.0',
+                    'DAYBREAK  /  1.2',
                     style: TextStyle(
                       fontSize: 10,
                       color: muted,
@@ -1250,5 +1293,74 @@ class SettingsSheet extends StatelessWidget {
             ),
       );
     },
+  );
+}
+
+class _LocationChoice extends StatelessWidget {
+  const _LocationChoice({required this.controller, this.onSelected});
+  final WeatherController controller;
+  final VoidCallback? onSelected;
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: controller,
+    builder:
+        (context, _) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading:
+                  controller.locating
+                      ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                      : const Icon(Icons.my_location),
+              title: Text(
+                controller.locating
+                    ? 'Finding your location…'
+                    : 'Use current location',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              subtitle: Text(
+                controller.settings.place.isCurrentLocation
+                    ? 'Using ${controller.settings.place.name}${controller.settings.place.accuracyMeters == null ? '' : ' · ±${controller.settings.place.accuracyMeters!.round()} m'}'
+                    : 'Share location while using Daybreak, or choose a city.',
+                style: const TextStyle(fontSize: 11),
+              ),
+              enabled: !controller.locating,
+              onTap: () async {
+                if (await controller.useCurrentLocation() && context.mounted) {
+                  onSelected?.call();
+                }
+              },
+            ),
+            if (controller.locationError != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  controller.locationError!,
+                  style: const TextStyle(fontSize: 12, color: muted),
+                ),
+              ),
+            if (controller.locationIssue == LocationIssue.disabled ||
+                controller.locationIssue == LocationIssue.deniedForever)
+              TextButton(
+                onPressed:
+                    () => controller.locationLookup.openSettings(
+                      controller.locationIssue!,
+                    ),
+                child: Text(
+                  controller.locationIssue == LocationIssue.disabled
+                      ? 'Open location settings'
+                      : 'Open app permissions',
+                ),
+              ),
+          ],
+        ),
   );
 }

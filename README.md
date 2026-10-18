@@ -4,9 +4,17 @@ A local Android weather app built for the Motorola Razr 2025. Flutter UI, native
 
 ## Install
 
-Download **daybreak-android-arm64.apk** from the [latest GitHub release](https://github.com/jeethsuresh/weather/releases/latest) and install it on the phone. Android may ask you to allow installation from the browser or file manager you use. Open Daybreak, choose a city, then use **Settings → Add home-screen widget** (or long-press the launcher → Widgets → Daybreak).
+Download **daybreak-android-arm64.apk** from the [latest GitHub release](https://github.com/jeethsuresh/weather/releases/latest) and install it on the phone. Android may ask you to allow installation from the browser or file manager you use. Open Daybreak, choose a city, then use **Settings → Home-screen widgets** (or long-press the launcher → Widgets → Daybreak).
 
 GitHub releases are signed with a dedicated Daybreak release key. Every update keeps the same package ID and signing certificate. If you already installed the earlier locally provided APK signed with the development key, uninstall that version once before installing the GitHub release. Subsequent GitHub releases update in place.
+
+## Razr cover screen
+
+Short app windows (600 logical pixels tall or less) automatically use a compact, vertically scrolling card layout. Opening the phone returns to the full forecast. There is no portrait lock. The compact layout honors Android's reported camera-cutout and navigation safe insets.
+
+Tap a card to flip it: current conditions reveal precipitation chance for the next forecast hour, wind, humidity and feels-like temperature; the next-hours card reveals precipitation and wind per hour; each daily card reveals precipitation chance and peak reported wind speed. Card faces remain independent while scrolling. Missing fields are labelled "Not reported" and cached data from older versions remains readable. Reduced-motion settings disable the flip animation.
+
+The compact interface is validated at square/short window sizes, simulated camera insets, larger text, and an open/close resize transition. Motorola's exact camera cutouts and external-panel behavior still need a check on the physical Razr. This changes the app UI; the Android home-screen widget remains a separate surface.
 
 ## Weather sources
 
@@ -20,11 +28,11 @@ Automatic mode prefers the national service for Canadian and US cities, then Ope
 
 Settings and successful forecasts are persisted only in Android’s app storage. Forecasts are keyed by coordinates and source. The background isolate uses uncached preferences; switching cities clears old-city widget content immediately. Cache writes do not replace settings. Failed fetches preserve the last successful timestamp and forecast. Android cloud backup and device transfer are disabled for app data.
 
-The phone contacts the weather services directly over HTTPS. Those services receive its IP address and requested coordinates; city search receives the search text. The app requests no GPS permission. Toronto is the initial city, and city selection works without location access.
+The phone contacts the weather services directly over HTTPS. Those services receive its IP address and requested coordinates; city search receives the search text. Open-Meteo also receives coordinates for the timezone lookup, and Android’s geocoder resolves the area name. Toronto is the initial city. **Use current location** in the city picker or settings requests Android foreground location permission and a fresh position fix. Approximate location is accepted if that is what the user shares; its reported accuracy is shown in the picker. The app stores the coordinates locally, resolves the area name through Android’s geocoder, and resolves the timezone through Open-Meteo. It rechecks location when the app resumes if current-location mode is selected. Hourly background weather uses the last saved coordinates and never requests background location. Denying permission, disabling location services or timing out keeps the saved area unchanged; manual city selection always remains available.
 
 WorkManager requests a network-connected check every hour and survives ordinary process death and reboot. Android Doze, battery restrictions, force-stop, and connectivity can delay execution. This is an hourly request, not an exact alarm. Opening the app catches up; pull to refresh forces a request. Turning off hourly checks cancels periodic work. Unit and source choices also apply to the widget.
 
-The native widget reads one atomic saved payload, displays update age, marks stale data, advances through cached forecast hours, and opens Daybreak when tapped. Its hourly widget redraw only updates cached presentation; WorkManager fetches fresh weather. Neither the widget nor the app is an emergency warning system.
+Three fixed-size native widgets are available: **1×1** (temperature and icon), **2×1** (temperature, icon and conditions), and **2×2** (temperature, icon, conditions, wind speed and precipitation chance for the nearest forecast hour). There is no 4×2 option. Launcher cell dimensions vary by device. All sizes read one atomic saved payload and open Daybreak when tapped. The 2×2 names the precipitation hour and shows update age; small widgets turn the temperature amber when weather is stale. Missing readings display “—”; expired precipitation hours are never shown as current. Hourly native redraws advance the cached precipitation hour; WorkManager fetches fresh weather. Existing installations keep their original widget, now using the 2×2 content; remove and re-add it to reclaim the old launcher space. Neither the widget nor the app is an emergency warning system.
 
 ## Develop
 
@@ -41,9 +49,9 @@ flutter --no-version-check build apk --release --target-platform android-arm64
 
 `--no-version-check` avoids a hanging online SDK update check on this Mac. It does not disable dependency verification.
 
-Tests cover real provider fixtures, source routing and fallback, missing data, unit conversion, active/expired alerts, source-specific offline caching, manual refresh, corrupt-cache recovery, unit-change refresh races, DST, city search, and layouts at 320/390/480dp with larger text. The optional live suite makes actual requests to all three weather services and geocoding. Test fixtures are public responses captured on October 18, 2026.
+Tests cover real provider fixtures, source routing and fallback, missing data, unit conversion, active/expired alerts, source-specific offline caching, manual refresh, corrupt-cache recovery, unit-change refresh races, DST, city search, and layouts at 320/390/480dp with larger text. Widget tests cover metric/imperial snapshots, missing versus zero readings, expired hours, clearing a location, publishing all three providers, and rejecting an old location/unit refresh. Additional tests cover compact square/short windows, simulated camera insets, independent flip state while scrolling, reduced motion, open/close resizing, keyboard-constrained city search, GPS permission denial, approximate fixes, stale-location rejection and picker dismissal during a pending fix. The optional live suite makes actual requests to all three weather services and geocoding. Test fixtures are public responses captured on October 18, 2026.
 
-Source map: `lib/weather_api.dart` (requests/decoders), `lib/repository.dart` and `lib/storage.dart` (local persistence), `lib/background.dart` (periodic work/widget publishing), `lib/controller.dart` (foreground state), `lib/ui/weather_screen.dart` (screens), and `android/app/src/main/kotlin/dev/jeeth/local_weather/WeatherWidgetProvider.kt` (widget).
+Source map: `lib/weather_api.dart` (requests/decoders), `lib/repository.dart` and `lib/storage.dart` (local persistence), `lib/background.dart` (periodic work/widget publishing), `lib/controller.dart` (foreground state), `lib/location.dart` (foreground position and permission flow), `lib/ui/weather_screen.dart` (full forecast and sheets), `lib/ui/compact_weather.dart` (cover-screen cards), and `android/app/src/main/kotlin/dev/jeeth/local_weather/WeatherWidgetProvider.kt` (widget).
 
 Only Android is configured in this project. No iOS widget or app target is included.
 
@@ -59,7 +67,7 @@ python3 scripts/release.py
 
 It analyzes, tests, builds and signs the APK on the local machine, pushes the `v` tag, then uploads the APK and checksums to GitHub Releases. The signing key stays on this Mac. Install GitHub CLI and authenticate with `gh auth login` if no existing GitHub credential is available; this Mac also has a local CLI copy in ignored `.tools/gh`.
 
-For a new version, change `version` in `pubspec.yaml` (for example, `1.0.1+2`), increasing both the version name and build number, then commit and run the command. Do not reuse published version codes or modify published tags. Obtainium can later subscribe to the repository URL and use these same release assets.
+For a new version, change `version` in `pubspec.yaml` (for example, `1.1.1+3`), increasing both the version name and build number, then commit and run the command. Do not reuse published version codes or modify published tags. Obtainium can later subscribe to the repository URL and use these same release assets.
 
 Pushes to `main` and pull requests run `.github/workflows/ci.yml` for analysis and tests. Publishing a release runs `.github/workflows/release.yml`, which verifies the downloaded APK’s checksum, permanent signing certificate, package ID and release version. GitHub does not receive the private signing key or its passwords.
 

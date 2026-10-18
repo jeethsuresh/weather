@@ -82,6 +82,23 @@ class WeatherApi {
         .toList();
   }
 
+  Future<String> timezoneAt(double latitude, double longitude) async {
+    final data = await http.get(
+      Uri.https('api.open-meteo.com', '/v1/forecast', {
+        'latitude': '$latitude',
+        'longitude': '$longitude',
+        'timezone': 'auto',
+        'current': 'temperature_2m',
+        'forecast_days': '1',
+      }),
+    );
+    final timezone = data['timezone'];
+    if (timezone is! String || timezone.isEmpty) {
+      throw const WeatherException('Timezone unavailable.');
+    }
+    return timezone;
+  }
+
   Future<Forecast> fetch(Settings settings) async {
     final p = settings.place;
     if (settings.source == WeatherSource.openMeteo) return openMeteo(p);
@@ -112,7 +129,7 @@ class WeatherApi {
         'hourly':
             'temperature_2m,relative_humidity_2m,precipitation_probability,weather_code,wind_speed_10m',
         'daily':
-            'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset',
+            'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,sunrise,sunset',
       }),
     );
     return parseOpenMeteo(j, p, now(), notice: notice);
@@ -271,6 +288,7 @@ Forecast parseOpenMeteo(Json j, Place p, DateTime now, {String? notice}) {
         high: number(d['temperature_2m_max'][i]),
         low: number(d['temperature_2m_min'][i]),
         rain: number(d['precipitation_probability_max'][i]),
+        windMax: number((d['wind_speed_10m_max'] as List?)?[i]),
         summary: wmoSummary((d['weather_code'][i] as num?)?.toInt() ?? -1),
       ),
     );
@@ -342,6 +360,10 @@ Forecast parseCanada(Json feature, DateTime now) {
       if (_text(t['class']) == 'high') high = _value(t);
       if (_text(t['class']) == 'low') low = _value(t);
     }
+    final windMax = _maximum(
+      _objects(f['winds']?['periods']).map((w) => _value(w['speed'])),
+    );
+    final rain = _canadaProbability(f);
     final label = _text(
       f['period']?['textForecastName'],
       _text(f['period']?['value']),
@@ -356,7 +378,8 @@ Forecast parseCanada(Json feature, DateTime now) {
           summary: last.summary,
           high: last.high,
           low: low,
-          rain: last.rain,
+          rain: _maximum([last.rain, rain]),
+          windMax: _maximum([last.windMax, windMax]),
         ),
       );
     } else {
@@ -369,7 +392,8 @@ Forecast parseCanada(Json feature, DateTime now) {
             f['abbreviatedForecast']?['textSummary'],
             _text(f['cloudPrecip']),
           ),
-          rain: _value(f['precipitation']?['lop']),
+          rain: rain,
+          windMax: windMax,
         ),
       );
     }
@@ -436,17 +460,7 @@ Forecast parseNws(
             '${h['temperature']['unitCode']}'.contains('degF'))) {
       temperature = (temperature - 32) * 5 / 9;
     }
-    var wind = number(
-      h['windSpeed'] is Map
-          ? h['windSpeed']['value']
-          : RegExp(r'[\d.]+').firstMatch('${h['windSpeed']}')?.group(0),
-    );
-    if (wind != null && '${h['windSpeed']}'.contains('mph')) wind *= 1.609344;
-    if (wind != null &&
-        h['windSpeed'] is Map &&
-        '${h['windSpeed']['unitCode']}'.contains('m_s-1')) {
-      wind *= 3.6;
-    }
+    final wind = _windKmh(h['windSpeed']);
     hours.add(
       HourForecast(
         time: DateTime.parse(h['startTime']),
@@ -465,6 +479,8 @@ Forecast parseNws(
   for (final d in _objects(daily['properties']?['periods'])) {
     var t = number(d['temperature']);
     if (t != null && d['temperatureUnit'] == 'F') t = (t - 32) * 5 / 9;
+    final windMax = _windKmh(d['windSpeed']);
+    final rain = number(d['probabilityOfPrecipitation']?['value']);
     final isDay = d['isDaytime'] == true;
     final date = place.local(DateTime.parse(d['startTime']));
     final label = DateFormat('EEEE').format(date);
@@ -476,7 +492,8 @@ Forecast parseNws(
           summary: last.summary,
           high: last.high,
           low: t,
-          rain: last.rain,
+          rain: _maximum([last.rain, rain]),
+          windMax: _maximum([last.windMax, windMax]),
         ),
       );
     } else {
@@ -486,7 +503,8 @@ Forecast parseNws(
           summary: d['shortForecast'] ?? '',
           high: isDay ? t : null,
           low: isDay ? null : t,
-          rain: number(d['probabilityOfPrecipitation']?['value']),
+          rain: rain,
+          windMax: windMax,
         ),
       );
     }
@@ -524,4 +542,41 @@ Forecast parseNws(
             ? 'Weather alerts could not be checked.'
             : null,
   );
+}
+
+// A provider can omit precipitation probabilities and wind entirely.
+double? _maximum(Iterable<double?> values) {
+  final valid = values.whereType<double>().toList();
+  return valid.isEmpty ? null : valid.reduce(math.max);
+}
+
+double? _canadaProbability(Json forecast) {
+  final pop =
+      forecast['abbreviatedForecast']?['pop'] ??
+      forecast['abbreviated_forecast']?['pop'];
+  return _value(forecast['precipitation']?['lop']) ??
+      _value(pop) ??
+      number(_en(pop));
+}
+
+double? _windKmh(dynamic field) {
+  if (field is Map) {
+    final value = number(field['value']);
+    if (value == null) return null;
+    final unit = '${field['unitCode']}';
+    if (unit.contains('m_s-1')) return value * 3.6;
+    if (unit.contains('mi_h-1') || unit.contains('mph')) {
+      return value * 1.609344;
+    }
+    return value;
+  }
+  final text = '$field';
+  final speed = _maximum(
+    RegExp(r'[\d.]+').allMatches(text).map((m) => number(m.group(0))),
+  );
+  return speed == null
+      ? null
+      : text.contains('mph')
+      ? speed * 1.609344
+      : speed;
 }
