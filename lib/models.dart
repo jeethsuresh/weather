@@ -155,15 +155,20 @@ class DayForecast {
   const DayForecast({
     required this.label,
     required this.summary,
+    this.date,
     this.high,
     this.low,
     this.rain,
     this.windMax,
   });
   final String label, summary;
+
+  /// Calendar date in the forecast location, independent of the device timezone.
+  final String? date;
   final double? high, low, rain, windMax;
   Json toJson() => {
     'label': label,
+    'date': date,
     'summary': summary,
     'high': high,
     'low': low,
@@ -172,6 +177,7 @@ class DayForecast {
   };
   factory DayForecast.fromJson(Json j) => DayForecast(
     label: j['label'],
+    date: j['date'],
     summary: j['summary'],
     high: number(j['high']),
     low: number(j['low']),

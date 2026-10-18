@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart';
 import 'package:local_weather/models.dart';
 import 'package:local_weather/weather_api.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
@@ -34,6 +35,10 @@ void main() {
           expect(f.temperature.isFinite, isTrue);
           expect(f.upcoming(DateTime.now()), isNotEmpty);
           expect(f.days, isNotEmpty);
+          final today = DateFormat(
+            'yyyy-MM-dd',
+          ).format(s.place.local(DateTime.now()));
+          expect(f.days.any((day) => day.date == today), isTrue);
           expect(
             f.observedAt.isAfter(
               DateTime.now().subtract(const Duration(hours: 6)),

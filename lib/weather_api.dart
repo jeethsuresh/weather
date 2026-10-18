@@ -191,7 +191,7 @@ class WeatherApi {
       site = feature['properties']['identifier'] ?? feature['id'];
       if (site != null) await store.write('canada.site.${p.id}', site);
     }
-    return parseCanada(feature!, now());
+    return parseCanada(feature!, now(), place: p);
   }
 
   Future<Forecast> nws(Place p) async {
@@ -285,6 +285,7 @@ Forecast parseOpenMeteo(Json j, Place p, DateTime now, {String? notice}) {
     days.add(
       DayForecast(
         label: DateFormat('EEEE').format(p.local(_unix(d['time'][i]))),
+        date: DateFormat('yyyy-MM-dd').format(p.local(_unix(d['time'][i]))),
         high: number(d['temperature_2m_max'][i]),
         low: number(d['temperature_2m_min'][i]),
         rain: number(d['precipitation_probability_max'][i]),
@@ -320,7 +321,11 @@ Forecast parseOpenMeteo(Json j, Place p, DateTime now, {String? notice}) {
   );
 }
 
-Forecast parseCanada(Json feature, DateTime now) {
+Forecast parseCanada(
+  Json feature,
+  DateTime now, {
+  Place place = Place.toronto,
+}) {
   final p = feature['properties'] as Json;
   final current = (p['currentConditions'] as Json?) ?? <String, dynamic>{};
   final hours = <HourForecast>[];
@@ -353,6 +358,8 @@ Forecast parseCanada(Json feature, DateTime now) {
     throw const WeatherException('The Canadian forecast is incomplete.');
   }
   final days = <DayForecast>[];
+  final issued = place.local(_date(p['forecastGroup']?['timestamp']) ?? now);
+
   for (final f in _objects(p['forecastGroup']?['forecasts'])) {
     final temps = _objects(f['temperatures']?['temperature']);
     double? high, low;
@@ -375,6 +382,7 @@ Forecast parseCanada(Json feature, DateTime now) {
       days.add(
         DayForecast(
           label: last.label,
+          date: last.date,
           summary: last.summary,
           high: last.high,
           low: low,
@@ -386,6 +394,7 @@ Forecast parseCanada(Json feature, DateTime now) {
       days.add(
         DayForecast(
           label: label,
+          date: _canadaDate(f['period'], issued),
           high: high,
           low: low,
           summary: _text(
@@ -489,6 +498,7 @@ Forecast parseNws(
       days.add(
         DayForecast(
           label: last.label,
+          date: last.date,
           summary: last.summary,
           high: last.high,
           low: t,
@@ -500,6 +510,7 @@ Forecast parseNws(
       days.add(
         DayForecast(
           label: isDay ? label : '${d['name']}',
+          date: DateFormat('yyyy-MM-dd').format(date),
           summary: d['shortForecast'] ?? '',
           high: isDay ? t : null,
           low: isDay ? null : t,
@@ -542,6 +553,39 @@ Forecast parseNws(
             ? 'Weather alerts could not be checked.'
             : null,
   );
+}
+
+// ECCC uses weekday names rather than dates. Anchor them to the issue date
+// at the selected location, including when the first period is Tonight.
+String? _canadaDate(dynamic period, DateTime issued) {
+  const weekdays = [
+    'monday',
+    'tuesday',
+    'wednesday',
+    'thursday',
+    'friday',
+    'saturday',
+    'sunday',
+  ];
+  final name = _text(period?['value']).toLowerCase();
+  final label = _text(period?['textForecastName']).toLowerCase();
+  final base = DateTime.utc(issued.year, issued.month, issued.day);
+  final weekday = weekdays.indexWhere(
+    (day) => name.startsWith(day) || label.startsWith(day),
+  );
+  int? offset;
+  if (weekday >= 0) {
+    offset = (weekday + 1 - base.weekday + 7) % 7;
+  } else if (label == 'today' ||
+      label == 'tonight' ||
+      label.startsWith('this ')) {
+    offset = 0;
+  } else if (label.startsWith('tomorrow')) {
+    offset = 1;
+  }
+  return offset == null
+      ? null
+      : DateFormat('yyyy-MM-dd').format(base.add(Duration(days: offset)));
 }
 
 // A provider can omit precipitation probabilities and wind entirely.

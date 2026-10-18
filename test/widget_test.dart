@@ -20,7 +20,22 @@ void main() {
     temperature: -12,
     summary: 'Snow',
     wind: wind,
-    days: [],
+    days: const [
+      DayForecast(
+        label: 'Today',
+        date: '2026-10-18',
+        summary: 'Snow',
+        high: 3,
+        low: -17,
+      ),
+      DayForecast(
+        label: 'Monday',
+        date: '2026-10-19',
+        summary: 'Cloudy',
+        high: 5,
+        low: -8,
+      ),
+    ],
     hours: [
       HourForecast(
         time: now.subtract(const Duration(hours: 2)),
@@ -47,6 +62,8 @@ void main() {
         'timestamp':
             now.add(const Duration(minutes: 20)).millisecondsSinceEpoch,
         'time': '3pm',
+        'temperature': -11.0,
+        'temperatureText': '-11°',
         'rain': '60%',
       },
     ]);
@@ -57,7 +74,22 @@ void main() {
     );
     expect(imperial['temperature'], '10°');
     expect(imperial['wind'], '20 mph');
-    expect(imperial['hours'], celsius['hours']);
+    expect(
+      (imperial['hours'] as List).single['temperature'],
+      closeTo(12.2, .001),
+    );
+    expect((imperial['hours'] as List).single['temperatureText'], '12°');
+    expect((imperial['hours'] as List).single['rain'], '60%');
+    expect(celsius['days'], [
+      {'date': '2026-10-18', 'high': '3°', 'low': '-17°'},
+      {'date': '2026-10-19', 'high': '5°', 'low': '-8°'},
+    ]);
+    expect((imperial['days'] as List).first, {
+      'date': '2026-10-18',
+      'high': '37°',
+      'low': '1°',
+    });
+    expect(celsius['timeZone'], 'America/Toronto');
   });
 
   test('missing wind and probability stay unavailable, zero stays zero', () {
@@ -94,8 +126,71 @@ void main() {
     expect(empty['wind'], '—');
     expect(empty['summary'], 'Tap to set up');
     expect(empty['hours'], isEmpty);
+    expect(empty['days'], isEmpty);
     expect(empty['fetchedAt'], 0);
   });
+
+  test(
+    'dated ranges survive midnight and never relabel yesterday as today',
+    () {
+      final midnight = DateTime.utc(2026, 10, 19, 4, 15);
+      final payload = widgetPayload(const Settings(), forecast(), midnight);
+      expect((payload['days'] as List).first['date'], '2026-10-18');
+      expect((payload['days'] as List)[1]['date'], '2026-10-19');
+      expect(payload['timeZone'], 'America/Toronto');
+    },
+  );
+
+  test(
+    'legacy ranges only infer issue day and missing extrema remain unavailable',
+    () {
+      final f = Forecast.fromJson(
+        forecast().toJson()
+          ..['days'] = [
+            {'label': 'Today', 'summary': 'Sunny', 'low': -4},
+            {'label': 'Monday', 'summary': 'Sunny', 'high': 8, 'low': 2},
+          ],
+      );
+      final payload = widgetPayload(const Settings(), f, now);
+      expect((payload['days'] as List).first, {
+        'date': '2026-10-18',
+        'high': '—',
+        'low': '-4°',
+      });
+      expect((payload['days'] as List)[1]['date'], isNull);
+    },
+  );
+
+  test(
+    'hourly graph preserves chronological temperatures through a flat or freezing trend',
+    () {
+      final j = forecast().toJson();
+      j['hours'] = List.generate(
+        13,
+        (index) =>
+            HourForecast(
+              time: now.add(Duration(hours: index)),
+              temperature: index < 4 ? -2 : 0,
+              summary: 'Cloudy',
+            ).toJson(),
+      );
+      final data = widgetPayload(const Settings(), Forecast.fromJson(j), now);
+      final hours = data['hours'] as List;
+      expect(hours.length, 13);
+      expect(hours.take(4).map((h) => h['temperature']), everyElement(-2));
+      expect(hours.last['temperature'], 0);
+      expect(hours.last['temperatureText'], '0°');
+      expect(
+        hours.map((h) => h['timestamp']),
+        orderedEquals(
+          List.generate(
+            13,
+            (i) => now.add(Duration(hours: i)).millisecondsSinceEpoch,
+          ),
+        ),
+      );
+    },
+  );
 
   final calls = <MethodCall>[];
   const channel = MethodChannel('home_widget');

@@ -1281,7 +1281,7 @@ class SettingsSheet extends StatelessWidget {
                 const SizedBox(height: 16),
                 const Center(
                   child: Text(
-                    'DAYBREAK  /  1.2',
+                    'DAYBREAK  /  1.3',
                     style: TextStyle(
                       fontSize: 10,
                       color: muted,

@@ -4,5 +4,5 @@
     <string name="widget_details_name">Daybreak · 2×2</string>
     <string name="widget_temperature_description">Temperature and weather icon. Tap to open Daybreak.</string>
     <string name="widget_summary_description">Temperature, weather icon and conditions. Tap to open Daybreak.</string>
-    <string name="widget_description">Temperature, weather, wind speed and next-hour precipitation chance. Tap to open Daybreak.</string>
+    <string name="widget_description">Temperature, daily high and low, hourly temperature graph, wind speed and precipitation chance. Tap to open Daybreak.</string>
 </resources>

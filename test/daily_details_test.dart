@@ -25,10 +25,13 @@ void main() {
         ],
       };
       final f = parseCanada(j, now);
+      expect(f.days.first.date, '2026-10-18');
+      expect(f.days[1].date, '2026-10-19');
       expect(f.days.first.rain, 60);
       expect(f.days.first.windMax, 40);
       final cached = Forecast.fromJson(jsonDecode(jsonEncode(f.toJson())));
       expect(cached.days.first.windMax, 40);
+      expect(cached.days.first.date, '2026-10-18');
     },
   );
   test('NWS daily peak wind uses upper end of range and converts mph', () {
@@ -50,6 +53,8 @@ void main() {
       ),
       now,
     );
+    expect(f.days.first.date, '2026-10-18');
+    expect(f.days[1].date, '2026-10-19');
     expect(f.days.first.windMax, closeTo(32.18688, .0001));
   });
   test(
@@ -58,6 +63,8 @@ void main() {
       final j = fixture('open_meteo');
       j['daily']['wind_speed_10m_max'] = List.filled(7, 28.5);
       final f = parseOpenMeteo(j, Place.toronto, now);
+      expect(f.days.first.date, '2026-10-18');
+      expect(f.days[1].date, '2026-10-19');
       expect(f.days.first.windMax, 28.5);
       expect(
         Forecast.fromJson(
@@ -71,4 +78,40 @@ void main() {
       );
     },
   );
+  test(
+    'Canadian date uses forecast issue date in selected location timezone',
+    () {
+      final j = fixture('canada');
+      j['properties']['forecastGroup']['timestamp'] = {
+        'en': '2026-10-18T00:30:00Z',
+      };
+      final periods = j['properties']['forecastGroup']['forecasts'];
+      periods[0]['period']['value'] = {'en': 'Saturday'};
+      periods[1]['period']['value'] = {'en': 'Saturday night'};
+      final f = parseCanada(
+        j,
+        now,
+        place: const Place(
+          name: 'Vancouver',
+          latitude: 49.28,
+          longitude: -123.12,
+          country: 'CA',
+          timezone: 'America/Vancouver',
+        ),
+      );
+      expect(f.days.first.date, '2026-10-17');
+    },
+  );
+
+  test('tonight-only Canadian forecast does not borrow tomorrow high', () {
+    final j = fixture('canada');
+    (j['properties']['forecastGroup']['forecasts'] as List).removeAt(0);
+    final f = parseCanada(j, now);
+    expect(f.days.first.date, '2026-10-18');
+    expect(f.days.first.label, 'Tonight');
+    expect(f.days.first.high, isNull);
+    expect(f.days.first.low, 5);
+    expect(f.days[1].date, '2026-10-19');
+    expect(f.days[1].high, 18);
+  });
 }
