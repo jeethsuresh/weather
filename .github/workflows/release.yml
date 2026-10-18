@@ -1,0 +1,44 @@
+name: Verify published APK
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ github.event.release.tag_name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Download release assets
+        run: gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern daybreak-android-arm64.apk --pattern SHA256SUMS --dir dist
+      - name: Verify checksum
+        run: cd dist && sha256sum --check SHA256SUMS
+      - name: Set up APK verification tools
+        run: sdkmanager 'build-tools;34.0.0'
+      - name: Verify signing certificate and version
+        run: |
+          "$ANDROID_HOME/build-tools/34.0.0/apksigner" verify --print-certs dist/daybreak-android-arm64.apk > dist/certificate.txt
+          "$ANDROID_HOME/build-tools/34.0.0/aapt2" dump badging dist/daybreak-android-arm64.apk > dist/package.txt
+          python3 - <<'PY'
+          import os, pathlib, re
+          expected = pathlib.Path('android/release-certificate.sha256').read_text().strip()
+          certificates = re.findall(r'certificate SHA-256 digest: (\w+)', pathlib.Path('dist/certificate.txt').read_text())
+          if certificates != [expected]:
+              raise SystemExit('APK signing certificate does not match Daybreak.')
+          package = pathlib.Path('dist/package.txt').read_text()
+          identity = re.search(r"package: name='([^']+)' versionCode='(\d+)' versionName='([^']+)'", package)
+          if not identity or identity[1] != 'dev.jeeth.local_weather' or 'v' + identity[3] != os.environ['RELEASE_TAG']:
+              raise SystemExit('APK package ID or version does not match this release.')
+          print('APK checksum, signing certificate, package ID and release version verified.')
+          PY

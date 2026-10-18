@@ -1,0 +1,1380 @@
+{
+  "type": "Feature",
+  "properties": {
+    "lastUpdated": "2026-10-18T16:02:09Z",
+    "identifier": "on-143",
+    "name": {
+      "en": "Toronto",
+      "fr": "Toronto"
+    },
+    "region": {
+      "en": "City of Toronto",
+      "fr": "ville de Toronto"
+    },
+    "url": {
+      "en": "https://weather.gc.ca/en/location/index.html?coords=43.65,-79.38",
+      "fr": "https://meteo.gc.ca/fr/location/index.html?coords=43.65,-79.38"
+    },
+    "currentConditions": {
+      "iconCode": {
+        "format": "gif",
+        "value": 1,
+        "url": "https://weather.gc.ca/weathericons/01.gif"
+      },
+      "timestamp": {
+        "en": "2026-10-18T16:00:00Z",
+        "fr": "2026-10-18T16:00:00Z"
+      },
+      "relativeHumidity": {
+        "units": {
+          "en": "%",
+          "fr": "%"
+        },
+        "qaValue": {
+          "en": 100,
+          "fr": 100
+        },
+        "value": {
+          "en": 40,
+          "fr": 40
+        }
+      },
+      "wind": {
+        "speed": {
+          "unitType": {
+            "en": "metric",
+            "fr": "metric"
+          },
+          "units": {
+            "en": "km/h",
+            "fr": "km/h"
+          },
+          "qaValue": {
+            "en": 100,
+            "fr": 100
+          },
+          "value": {
+            "en": 21,
+            "fr": 21
+          }
+        },
+        "direction": {
+          "qaValue": {
+            "en": 100,
+            "fr": 100
+          },
+          "value": {
+            "en": "SW",
+            "fr": "SO"
+          }
+        },
+        "bearing": {
+          "units": {
+            "en": "degrees",
+            "fr": "degrees"
+          },
+          "qaValue": {
+            "en": 100,
+            "fr": 100
+          },
+          "value": {
+            "en": 236.0,
+            "fr": 236.0
+          }
+        },
+        "gust": {
+          "unitType": {
+            "en": "metric",
+            "fr": "metric"
+          },
+          "units": {
+            "en": "km/h",
+            "fr": "km/h"
+          },
+          "value": {
+            "en": 31,
+            "fr": 31
+          },
+          "qaValue": {
+            "en": 100,
+            "fr": 100
+          }
+        }
+      },
+      "pressure": {
+        "unitType": {
+          "en": "metric",
+          "fr": "metric"
+        },
+        "units": {
+          "en": "kPa",
+          "fr": "kPa"
+        },
+        "change": {
+          "en": 0.04,
+          "fr": 0.04
+        },
+        "tendency": {
+          "en": "rising",
+          "fr": "\u00e0 la hausse"
+        },
+        "qaValue": {
+          "en": 100,
+          "fr": 100
+        },
+        "value": {
+          "en": 103.2,
+          "fr": 103.2
+        }
+      },
+      "temperature": {
+        "unitType": {
+          "en": "metric",
+          "fr": "metric"
+        },
+        "units": {
+          "en": "C",
+          "fr": "C"
+        },
+        "qaValue": {
+          "en": 100,
+          "fr": 100
+        },
+        "value": {
+          "en": 14.4,
+          "fr": 14.4
+        }
+      },
+      "dewpoint": {
+        "unitType": {
+          "en": "metric",
+          "fr": "metric"
+        },
+        "units": {
+          "en": "C",
+          "fr": "C"
+        },
+        "qaValue": {
+          "en": 100,
+          "fr": 100
+        },
+        "value": {
+          "en": 0.8,
+          "fr": 0.8
+        }
+      },
+      "station": {
+        "code": {
+          "en": "yyz",
+          "fr": "yyz"
+        },
+        "lat": {
+          "en": "43.68N",
+          "fr": "43.68N"
+        },
+        "lon": {
+          "en": "79.63W",
+          "fr": "79.63O"
+        },
+        "value": {
+          "en": "Toronto Pearson Int'l Airport",
+          "fr": "A\u00e9roport int. Pearson de Toronto"
+        }
+      },
+      "condition": {
+        "en": "Mainly Sunny",
+        "fr": "G\u00e9n\u00e9ralement ensoleill\u00e9"
+      },
+      "windChill": {
+        "unitType": {
+          "en": "metric",
+          "fr": "metric"
+        },
+        "value": {
+          "en": -3,
+          "fr": -3
+        },
+        "qaValue": {
+          "en": 100,
+          "fr": 100
+        }
+      }
+    },
+    "forecastGroup": {
+      "timestamp": {
+        "en": "2026-10-18T15:00:00Z",
+        "fr": "2026-10-18T15:00:00Z"
+      },
+      "regionalNormals": {
+        "textSummary": {
+          "en": "Low plus 5. High 13.",
+          "fr": "Minimum plus 5. Maximum 13."
+        },
+        "temperature": [
+          {
+            "unitType": {
+              "en": "metric",
+              "fr": "metric"
+            },
+            "units": {
+              "en": "C",
+              "fr": "C"
+            },
+            "class": {
+              "en": "high",
+              "fr": "high"
+            },
+            "value": {
+              "en": 13,
+              "fr": 13
+            }
+          },
+          {
+            "unitType": {
+              "en": "metric",
+              "fr": "metric"
+            },
+            "units": {
+              "en": "C",
+              "fr": "C"
+            },
+            "class": {
+              "en": "low",
+              "fr": "low"
+            },
+            "value": {
+              "en": 5,
+              "fr": 5
+            }
+          }
+        ]
+      },
+      "forecasts": [
+        {
+          "uv": {
+            "index": {
+              "en": "4",
+              "fr": "4"
+            },
+            "category": {
+              "en": "moderate",
+              "fr": "mod\u00e9r\u00e9"
+            },
+            "textSummary": {
+              "en": "UV index 4 or moderate.",
+              "fr": "Indice UV de 4 ou mod\u00e9r\u00e9."
+            }
+          },
+          "period": {
+            "textForecastName": {
+              "en": "Today",
+              "fr": "Aujourd'hui"
+            },
+            "value": {
+              "en": "Sunday",
+              "fr": "dimanche"
+            }
+          },
+          "temperatures": {
+            "temperature": [
+              {
+                "unitType": {
+                  "en": "metric",
+                  "fr": "metric"
+                },
+                "units": {
+                  "en": "C",
+                  "fr": "C"
+                },
+                "class": {
+                  "en": "high",
+                  "fr": "high"
+                },
+                "value": {
+                  "en": 17,
+                  "fr": 17
+                }
+              }
+            ],
+            "textSummary": {
+              "en": "High 17.",
+              "fr": "Maximum 17."
+            }
+          },
+          "winds": {
+            "periods": [
+              {
+                "bearing": {
+                  "units": {
+                    "en": "degrees",
+                    "fr": "degrees"
+                  },
+                  "value": {
+                    "en": 22,
+                    "fr": 22
+                  }
+                },
+                "index": {
+                  "en": 1,
+                  "fr": 1
+                },
+                "rank": {
+                  "en": "major",
+                  "fr": "major"
+                },
+                "speed": {
+                  "unitType": {
+                    "en": "metric",
+                    "fr": "metric"
+                  },
+                  "units": {
+                    "en": "km/h",
+                    "fr": "km/h"
+                  },
+                  "value": {
+                    "en": 20,
+                    "fr": 20
+                  }
+                },
+                "gust": {
+                  "unitType": {
+                    "en": "metric",
+                    "fr": "metric"
+                  },
+                  "units": {
+                    "en": "km/h",
+                    "fr": "km/h"
+                  },
+                  "value": {
+                    "en": 0,
+                    "fr": 0
+                  }
+                },
+                "direction": {
+                  "en": "SW",
+                  "fr": "SO"
+                }
+              },
+              {
+                "bearing": {
+                  "units": {
+                    "en": "degrees",
+                    "fr": "degrees"
+                  },
+                  "value": {
+                    "en": 22,
+                    "fr": 22
+                  }
+                },
+                "index": {
+                  "en": 2,
+                  "fr": 2
+                },
+                "rank": {
+                  "en": "major",
+                  "fr": "major"
+                },
+                "speed": {
+                  "unitType": {
+                    "en": "metric",
+                    "fr": "metric"
+                  },
+                  "units": {
+                    "en": "km/h",
+                    "fr": "km/h"
+                  },
+                  "value": {
+                    "en": 20,
+                    "fr": 20
+                  }
+                },
+                "gust": {
+                  "unitType": {
+                    "en": "metric",
+                    "fr": "metric"
+                  },
+                  "units": {
+                    "en": "km/h",
+                    "fr": "km/h"
+                  },
+                  "value": {
+                    "en": 40,
+                    "fr": 40
+                  }
+                },
+                "direction": {
+                  "en": "SW",
+                  "fr": "SO"
+                }
+              }
+            ],
+            "textSummary": {
+              "en": "Wind southwest 20 km/h gusting to 40.",
+              "fr": "Vents du sud-ouest de 20 km/h avec rafales \u00e0 40."
+            }
+          },
+          "cloudPrecip": {
+            "en": "Sunny.",
+            "fr": "Ensoleill\u00e9."
+          },
+          "relativeHumidity": {
+            "units": {
+              "en": "%",
+              "fr": "%"
+            },
+            "value": {
+              "en": 50,
+              "fr": 50
+            }
+          },
+          "abbreviatedForecast": {
+            "icon": {
+              "format": "gif",
+              "value": 0,
+              "url": "https://weather.gc.ca/weathericons/00.gif"
+            },
+            "textSummary": {
+              "en": "Sunny",
+              "fr": "Ensoleill\u00e9"
+            }
+          },
+          "textSummary": {
+            "en": "Sunny. Wind southwest 20 km/h gusting to 40. High 17. UV index 4 or moderate.",
+            "fr": "Ensoleill\u00e9. Vents du sud-ouest de 20 km/h avec rafales \u00e0 40. Maximum 17. Indice UV de 4 ou mod\u00e9r\u00e9."
+          }
+        },
+        {
+          "period": {
+            "textForecastName": {
+              "en": "Tonight",
+              "fr": "Ce soir et cette nuit"
+            },
+            "value": {
+              "en": "Sunday night",
+              "fr": "ce soir et cette nuit"
+            }
+          },
+          "temperatures": {
+            "temperature": [
+              {
+                "unitType": {
+                  "en": "metric",
+                  "fr": "metric"
+                },
+                "units": {
+                  "en": "C",
+                  "fr": "C"
+                },
+                "class": {
+                  "en": "low",
+                  "fr": "low"
+                },
+                "value": {
+                  "en": 5,
+                  "fr": 5
+                }
+              }
+            ],
+            "textSummary": {
+              "en": "Low plus 5.",
+              "fr": "Minimum plus 5."
+            }
+          },
+          "winds": {
+            "periods": [
+              {
+                "bearing": {
+                  "units": {
+                    "en": "degrees",
+                    "fr": "degrees"
+                  },
+                  "value": {
+                    "en": 22,
+                    "fr": 22
+                  }
+                },
+                "index": {
+                  "en": 1,
+                  "fr": 1
+                },
+                "rank": {
+                  "en": "major",
+                  "fr": "major"
+                },
+                "speed": {
+                  "unitType": {
+                    "en": "metric",
+                    "fr": "metric"
+                  },
+                  "units": {
+                    "en": "km/h",
+                    "fr": "km/h"
+                  },
+                  "value": {
+                    "en": 20,
+                    "fr": 20
+                  }
+                },
+                "gust": {
+                  "unitType": {
+                    "en": "metric",
+                    "fr": "metric"
+                  },
+                  "units": {
+                    "en": "km/h",
+                    "fr": "km/h"
+                  },
+                  "value": {
+                    "en": 40,
+                    "fr": 40
+                  }
+                },
+                "direction": {
+                  "en": "SW",
+                  "fr": "SO"
+                }
+              },
+              {
+                "bearing": {
+                  "units": {
+                    "en": "degrees",
+                    "fr": "degrees"
+                  },
+                  "value": {
+                    "en": 22,
+                    "fr": 22
+                  }
+                },
+                "index": {
+                  "en": 2,
+                  "fr": 2
+                },
+                "rank": {
+                  "en": "major",
+                  "fr": "major"
+                },
+                "speed": {
+                  "unitType": {
+                    "en": "metric",
+                    "fr": "metric"
+                  },
+                  "units": {
+                    "en": "km/h",
+                    "fr": "km/h"
+                  },
+                  "value": {
+                    "en": 15,
+                    "fr": 15
+                  }
+                },
+                "gust": {
+                  "unitType": {
+                    "en": "metric",
+                    "fr": "metric"
+                  },
+                  "units": {
+                    "en": "km/h",
+                    "fr": "km/h"
+                  },
+                  "value": {
+                    "en": 0,
+                    "fr": 0
+                  }
+                },
+                "direction": {
+                  "en": "SW",
+                  "fr": "SO"
+                }
+              }
+            ],
+            "textSummary": {
+              "en": "Wind southwest 20 km/h gusting to 40 becoming light near midnight.",
+              "fr": "Vents du sud-ouest de 20 km/h avec rafales \u00e0 40 devenant l\u00e9gers vers minuit."
+            }
+          },
+          "cloudPrecip": {
+            "en": "Clear.",
+            "fr": "D\u00e9gag\u00e9."
+          },
+          "relativeHumidity": {
+            "units": {
+              "en": "%",
+              "fr": "%"
+            },
+            "value": {
+              "en": 100,
+              "fr": 100
+            }
+          },
+          "abbreviatedForecast": {
+            "icon": {
+              "format": "gif",
+              "value": 30,
+              "url": "https://weather.gc.ca/weathericons/30.gif"
+            },
+            "textSummary": {
+              "en": "Clear",
+              "fr": "D\u00e9gag\u00e9"
+            }
+          },
+          "textSummary": {
+            "en": "Clear. Wind southwest 20 km/h gusting to 40 becoming light near midnight. Low plus 5.",
+            "fr": "D\u00e9gag\u00e9. Vents du sud-ouest de 20 km/h avec rafales \u00e0 40 devenant l\u00e9gers vers minuit. Minimum plus 5."
+          }
+        },
+        {
+          "uv": {
+            "index": {
+              "en": "4",
+              "fr": "4"
+            },
+            "category": {
+              "en": "moderate",
+              "fr": "mod\u00e9r\u00e9"
+            },
+            "textSummary": {
+              "en": "UV index 4 or moderate.",
+              "fr": "Indice UV de 4 ou mod\u00e9r\u00e9."
+            }
+          },
+          "period": {
+            "textForecastName": {
+              "en": "Monday",
+              "fr": "Lundi"
+            },
+            "value": {
+              "en": "Monday",
+              "fr": "lundi"
+            }
+          },
+          "temperatures": {
+            "temperature": [
+              {
+                "unitType": {
+                  "en": "metric",
+                  "fr": "metric"
+                },
+                "units": {
+                  "en": "C",
+                  "fr": "C"
+                },
+                "class": {
+                  "en": "high",
+                  "fr": "high"
+                },
+                "value": {
+                  "en": 18,
+                  "fr": 18
+                }
+              }
+            ],
+            "textSummary": {
+              "en": "High 18.",
+              "fr": "Maximum 18."
+            }
+          },
+          "winds": {
+            "periods": [
+              {
+                "bearing": {
+                  "units": {
+                    "en": "degrees",
+                    "fr": "degrees"
+                  },
+                  "value": {
+                    "en": 22,
+                    "fr": 22
+                  }
+                },
+                "index": {
+                  "en": 1,
+                  "fr": 1
+                },
+                "rank": {
+                  "en": "major",
+                  "fr": "major"
+                },
+                "speed": {
+                  "unitType": {
+                    "en": "metric",
+                    "fr": "metric"
+                  },
+                  "units": {
+                    "en": "km/h",
+                    "fr": "km/h"
+                  },
+                  "value": {
+                    "en": 15,
+                    "fr": 15
+                  }
+                },
+                "gust": {
+                  "unitType": {
+                    "en": "metric",
+                    "fr": "metric"
+                  },
+                  "units": {
+                    "en": "km/h",
+                    "fr": "km/h"
+                  },
+                  "value": {
+                    "en": 0,
+                    "fr": 0
+                  }
+                },
+                "direction": {
+                  "en": "SW",
+                  "fr": "SO"
+                }
+              },
+              {
+                "bearing": {
+                  "units": {
+                    "en": "degrees",
+                    "fr": "degrees"
+                  },
+                  "value": {
+                    "en": 22,
+                    "fr": 22
+                  }
+                },
+                "index": {
+                  "en": 2,
+                  "fr": 2
+                },
+                "rank": {
+                  "en": "major",
+                  "fr": "major"
+                },
+                "speed": {
+                  "unitType": {
+                    "en": "metric",
+                    "fr": "metric"
+                  },
+                  "units": {
+                    "en": "km/h",
+                    "fr": "km/h"
+                  },
+                  "value": {
+                    "en": 10,
+                    "fr": 10
+                  }
+                },
+                "gust": {
+                  "unitType": {
+                    "en": "metric",
+                    "fr": "metric"
+                  },
+                  "units": {
+                    "en": "km/h",
+                    "fr": "km/h"
+                  },
+                  "value": {
+                    "en": 0,
+                    "fr": 0
+                  }
+                },
+                "direction": {
+                  "en": "SW",
+                  "fr": "SO"
+                }
+              }
+            ]
+          },
+          "cloudPrecip": {
+            "en": "Sunny.",
+            "fr": "Ensoleill\u00e9."
+          },
+          "relativeHumidity": {
+            "units": {
+              "en": "%",
+              "fr": "%"
+            },
+            "value": {
+              "en": 55,
+              "fr": 55
+            }
+          },
+          "abbreviatedForecast": {
+            "icon": {
+              "format": "gif",
+              "value": 0,
+              "url": "https://weather.gc.ca/weathericons/00.gif"
+            },
+            "textSummary": {
+              "en": "Sunny",
+              "fr": "Ensoleill\u00e9"
+            }
+          },
+          "textSummary": {
+            "en": "Sunny. High 18. UV index 4 or moderate.",
+            "fr": "Ensoleill\u00e9. Maximum 18. Indice UV de 4 ou mod\u00e9r\u00e9."
+          }
+        },
+        {
+          "period": {
+            "textForecastName": {
+              "en": "Monday night",
+              "fr": "Lundi soir et nuit"
+            },
+            "value": {
+              "en": "Monday night",
+              "fr": "lundi soir et nuit"
+            }
+          },
+          "temperatures": {
+            "temperature": [
+              {
+                "unitType": {
+                  "en": "metric",
+                  "fr": "metric"
+                },
+                "units": {
+                  "en": "C",
+                  "fr": "C"
+                },
+                "class": {
+                  "en": "low",
+                  "fr": "low"
+                },
+                "value": {
+                  "en": 8,
+                  "fr": 8
+                }
+              }
+            ],
+            "textSummary": {
+              "en": "Low 8.",
+              "fr": "Minimum 8."
+            }
+          },
+          "cloudPrecip": {
+            "en": "Clear.",
+            "fr": "D\u00e9gag\u00e9."
+          },
+          "relativeHumidity": {
+            "units": {
+              "en": "%",
+              "fr": "%"
+            },
+            "value": {
+              "en": 75,
+              "fr": 75
+            }
+          },
+          "abbreviatedForecast": {
+            "icon": {
+              "format": "gif",
+              "value": 30,
+              "url": "https://weather.gc.ca/weathericons/30.gif"
+            },
+            "textSummary": {
+              "en": "Clear",
+              "fr": "D\u00e9gag\u00e9"
+            }
+          },
+          "textSummary": {
+            "en": "Clear. Low 8.",
+            "fr": "D\u00e9gag\u00e9. Minimum 8."
+          }
+        }
+      ]
+    },
+    "hourlyForecastGroup": {
+      "timestamp": {
+        "en": "2026-10-18T11:00:00Z",
+        "fr": "2026-10-18T11:00:00Z"
+      },
+      "hourlyForecasts": [
+        {
+          "uv": {
+            "index": {
+              "value": {
+                "en": 4,
+                "fr": 4
+              }
+            }
+          },
+          "condition": {
+            "en": "Sunny",
+            "fr": "Ensoleill\u00e9"
+          },
+          "temperature": {
+            "unitType": {
+              "en": "metric",
+              "fr": "metric"
+            },
+            "units": {
+              "en": "C",
+              "fr": "C"
+            },
+            "value": {
+              "en": 11,
+              "fr": 11
+            }
+          },
+          "iconCode": {
+            "format": "png",
+            "value": 0,
+            "url": "https://weather.gc.ca/weathericons/00.gif"
+          },
+          "lop": {
+            "units": {
+              "en": "%",
+              "fr": "%"
+            },
+            "category": {
+              "en": "Nil",
+              "fr": "Nulle"
+            },
+            "value": {
+              "en": 0,
+              "fr": 0
+            }
+          },
+          "timestamp": "2026-10-18T17:00:00Z",
+          "wind": {
+            "speed": {
+              "unitType": {
+                "en": "metric",
+                "fr": "metric"
+              },
+              "units": {
+                "en": "km/h",
+                "fr": "km/h"
+              },
+              "value": {
+                "en": 20,
+                "fr": 20
+              }
+            },
+            "direction": {
+              "windDirFull": {
+                "en": "Southwest"
+              },
+              "value": {
+                "en": "SW",
+                "fr": "SO"
+              }
+            },
+            "gust": {
+              "unitType": {
+                "en": "metric",
+                "fr": "metric"
+              },
+              "units": {
+                "en": "km/h",
+                "fr": "km/h"
+              },
+              "value": {
+                "en": 40,
+                "fr": 40
+              }
+            }
+          }
+        },
+        {
+          "uv": {
+            "index": {
+              "value": {
+                "en": 3,
+                "fr": 3
+              }
+            }
+          },
+          "condition": {
+            "en": "Sunny",
+            "fr": "Ensoleill\u00e9"
+          },
+          "temperature": {
+            "unitType": {
+              "en": "metric",
+              "fr": "metric"
+            },
+            "units": {
+              "en": "C",
+              "fr": "C"
+            },
+            "value": {
+              "en": 13,
+              "fr": 13
+            }
+          },
+          "iconCode": {
+            "format": "png",
+            "value": 0,
+            "url": "https://weather.gc.ca/weathericons/00.gif"
+          },
+          "lop": {
+            "units": {
+              "en": "%",
+              "fr": "%"
+            },
+            "category": {
+              "en": "Nil",
+              "fr": "Nulle"
+            },
+            "value": {
+              "en": 0,
+              "fr": 0
+            }
+          },
+          "timestamp": "2026-10-18T18:00:00Z",
+          "wind": {
+            "speed": {
+              "unitType": {
+                "en": "metric",
+                "fr": "metric"
+              },
+              "units": {
+                "en": "km/h",
+                "fr": "km/h"
+              },
+              "value": {
+                "en": 20,
+                "fr": 20
+              }
+            },
+            "direction": {
+              "windDirFull": {
+                "en": "Southwest"
+              },
+              "value": {
+                "en": "SW",
+                "fr": "SO"
+              }
+            },
+            "gust": {
+              "unitType": {
+                "en": "metric",
+                "fr": "metric"
+              },
+              "units": {
+                "en": "km/h",
+                "fr": "km/h"
+              },
+              "value": {
+                "en": 40,
+                "fr": 40
+              }
+            }
+          }
+        },
+        {
+          "uv": {
+            "index": {
+              "value": {
+                "en": 1,
+                "fr": 1
+              }
+            }
+          },
+          "condition": {
+            "en": "Sunny",
+            "fr": "Ensoleill\u00e9"
+          },
+          "temperature": {
+            "unitType": {
+              "en": "metric",
+              "fr": "metric"
+            },
+            "units": {
+              "en": "C",
+              "fr": "C"
+            },
+            "value": {
+              "en": 14,
+              "fr": 14
+            }
+          },
+          "iconCode": {
+            "format": "png",
+            "value": 0,
+            "url": "https://weather.gc.ca/weathericons/00.gif"
+          },
+          "lop": {
+            "units": {
+              "en": "%",
+              "fr": "%"
+            },
+            "category": {
+              "en": "Nil",
+              "fr": "Nulle"
+            },
+            "value": {
+              "en": 0,
+              "fr": 0
+            }
+          },
+          "timestamp": "2026-10-18T19:00:00Z",
+          "wind": {
+            "speed": {
+              "unitType": {
+                "en": "metric",
+                "fr": "metric"
+              },
+              "units": {
+                "en": "km/h",
+                "fr": "km/h"
+              },
+              "value": {
+                "en": 20,
+                "fr": 20
+              }
+            },
+            "direction": {
+              "windDirFull": {
+                "en": "Southwest"
+              },
+              "value": {
+                "en": "SW",
+                "fr": "SO"
+              }
+            },
+            "gust": {
+              "unitType": {
+                "en": "metric",
+                "fr": "metric"
+              },
+              "units": {
+                "en": "km/h",
+                "fr": "km/h"
+              },
+              "value": {
+                "en": 40,
+                "fr": 40
+              }
+            }
+          }
+        },
+        {
+          "uv": {
+            "index": {
+              "value": {
+                "en": 1,
+                "fr": 1
+              }
+            }
+          },
+          "condition": {
+            "en": "Sunny",
+            "fr": "Ensoleill\u00e9"
+          },
+          "temperature": {
+            "unitType": {
+              "en": "metric",
+              "fr": "metric"
+            },
+            "units": {
+              "en": "C",
+              "fr": "C"
+            },
+            "value": {
+              "en": 16,
+              "fr": 16
+            }
+          },
+          "iconCode": {
+            "format": "png",
+            "value": 0,
+            "url": "https://weather.gc.ca/weathericons/00.gif"
+          },
+          "lop": {
+            "units": {
+              "en": "%",
+              "fr": "%"
+            },
+            "category": {
+              "en": "Nil",
+              "fr": "Nulle"
+            },
+            "value": {
+              "en": 0,
+              "fr": 0
+            }
+          },
+          "timestamp": "2026-10-18T20:00:00Z",
+          "wind": {
+            "speed": {
+              "unitType": {
+                "en": "metric",
+                "fr": "metric"
+              },
+              "units": {
+                "en": "km/h",
+                "fr": "km/h"
+              },
+              "value": {
+                "en": 20,
+                "fr": 20
+              }
+            },
+            "direction": {
+              "windDirFull": {
+                "en": "Southwest"
+              },
+              "value": {
+                "en": "SW",
+                "fr": "SO"
+              }
+            },
+            "gust": {
+              "unitType": {
+                "en": "metric",
+                "fr": "metric"
+              },
+              "units": {
+                "en": "km/h",
+                "fr": "km/h"
+              },
+              "value": {
+                "en": 40,
+                "fr": 40
+              }
+            }
+          }
+        },
+        {
+          "condition": {
+            "en": "Sunny",
+            "fr": "Ensoleill\u00e9"
+          },
+          "temperature": {
+            "unitType": {
+              "en": "metric",
+              "fr": "metric"
+            },
+            "units": {
+              "en": "C",
+              "fr": "C"
+            },
+            "value": {
+              "en": 17,
+              "fr": 17
+            }
+          },
+          "iconCode": {
+            "format": "png",
+            "value": 0,
+            "url": "https://weather.gc.ca/weathericons/00.gif"
+          },
+          "lop": {
+            "units": {
+              "en": "%",
+              "fr": "%"
+            },
+            "category": {
+              "en": "Nil",
+              "fr": "Nulle"
+            },
+            "value": {
+              "en": 0,
+              "fr": 0
+            }
+          },
+          "timestamp": "2026-10-18T21:00:00Z",
+          "wind": {
+            "speed": {
+              "unitType": {
+                "en": "metric",
+                "fr": "metric"
+              },
+              "units": {
+                "en": "km/h",
+                "fr": "km/h"
+              },
+              "value": {
+                "en": 20,
+                "fr": 20
+              }
+            },
+            "direction": {
+              "windDirFull": {
+                "en": "Southwest"
+              },
+              "value": {
+                "en": "SW",
+                "fr": "SO"
+              }
+            },
+            "gust": {
+              "unitType": {
+                "en": "metric",
+                "fr": "metric"
+              },
+              "units": {
+                "en": "km/h",
+                "fr": "km/h"
+              },
+              "value": {
+                "en": 40,
+                "fr": 40
+              }
+            }
+          }
+        }
+      ]
+    },
+    "warnings": [],
+    "riseSet": {
+      "disclaimer": {
+        "en": "The information provided here, for the times of the rise and set of the sun, is an estimate included as a convenience to our clients. Values shown here may differ from the official sunrise/sunset data available from (http://hia-iha.nrc-cnrc.gc.ca/sunrise_e.html)",
+        "fr": "Les heures de lever et coucher du soleil sont une estimation seulement et peuvent \u00eatre diff\u00e9rentes des heures officielles de lever et coucher du soleil disponibles ici ( http://hia-iha.nrc-cnrc.gc.ca/sunrise_f.html )"
+      },
+      "sunrise": {
+        "en": "2026-10-18T11:35:00Z",
+        "fr": "2026-10-18T11:35:00Z"
+      },
+      "sunset": {
+        "en": "2026-10-18T22:30:00Z",
+        "fr": "2026-10-18T22:30:00Z"
+      }
+    }
+  },
+  "geometry": {
+    "type": "Point",
+    "coordinates": [
+      -79.38,
+      43.65
+    ]
+  },
+  "id": "on-143",
+  "links": [
+    {
+      "type": "application/json",
+      "rel": "root",
+      "title": "The landing page of this server as JSON",
+      "href": "https://api.weather.gc.ca?f=json"
+    },
+    {
+      "type": "text/html",
+      "rel": "root",
+      "title": "The landing page of this server as HTML",
+      "href": "https://api.weather.gc.ca?f=html"
+    },
+    {
+      "rel": "self",
+      "type": "application/geo+json",
+      "title": "This document as JSON",
+      "href": "https://api.weather.gc.ca/collections/citypageweather-realtime/items/on-143?f=json"
+    },
+    {
+      "rel": "alternate",
+      "type": "application/ld+json",
+      "title": "This document as RDF (JSON-LD)",
+      "href": "https://api.weather.gc.ca/collections/citypageweather-realtime/items/on-143?f=jsonld"
+    },
+    {
+      "rel": "alternate",
+      "type": "text/html",
+      "title": "This document as HTML",
+      "href": "https://api.weather.gc.ca/collections/citypageweather-realtime/items/on-143?f=html"
+    },
+    {
+      "rel": "collection",
+      "type": "application/json",
+      "title": "City Page Weather [experimental]",
+      "href": "https://api.weather.gc.ca/collections/citypageweather-realtime"
+    }
+  ]
+}
