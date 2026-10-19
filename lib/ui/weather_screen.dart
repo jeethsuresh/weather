@@ -10,6 +10,7 @@ import '../location.dart';
 
 import 'compact_weather.dart';
 import 'weather_style.dart';
+import 'forecast_cards.dart';
 
 class WeatherScreen extends StatelessWidget {
   const WeatherScreen({super.key, required this.controller});
@@ -38,6 +39,8 @@ class WeatherScreen extends StatelessWidget {
       final f = controller.forecast;
       final now = DateTime.now();
       final hours = f?.upcoming(now) ?? [];
+      final scale =
+          MediaQuery.textScalerOf(context).scale(1).clamp(1, 2).toDouble();
       if (useCompactWeatherLayout(MediaQuery.sizeOf(context))) {
         return CompactWeatherView(
           controller: controller,
@@ -152,7 +155,13 @@ class WeatherScreen extends StatelessWidget {
                             onChoosePlace: () => _places(context),
                           )
                         else ...[
-                          _Hero(forecast: f, settings: s),
+                          CurrentWeatherCard(
+                            key: ValueKey('card-current-${s.place.id}'),
+                            forecast: f,
+                            settings: s,
+                            now: now,
+                            height: 330 * scale,
+                          ),
                           const SizedBox(height: 18),
                           if (controller.error != null || f.staleAt(now))
                             _Notice(
@@ -177,7 +186,7 @@ class WeatherScreen extends StatelessWidget {
                           const SizedBox(height: 6),
                           _SectionTitle(
                             'The hours ahead',
-                            trailing: '${hours.length} hours',
+                            trailing: '12 HOURS',
                           ),
                           const SizedBox(height: 14),
                           if (hours.isEmpty)
@@ -190,51 +199,34 @@ class WeatherScreen extends StatelessWidget {
                               ),
                             )
                           else
-                            SizedBox(
-                              height:
-                                  150 *
-                                  MediaQuery.textScalerOf(
-                                    context,
-                                  ).scale(1).clamp(1, 2),
-                              child: ListView.separated(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: hours.length,
-                                separatorBuilder:
-                                    (_, _) => const SizedBox(width: 8),
-                                itemBuilder:
-                                    (_, i) => _HourTile(
-                                      hour: hours[i],
-                                      settings: s,
-                                      first: i == 0,
-                                    ),
-                              ),
+                            HoursWeatherCard(
+                              key: ValueKey('card-hours-${s.place.id}'),
+                              forecast: f,
+                              settings: s,
+                              now: now,
+                              height: 255 * scale,
                             ),
                           const SizedBox(height: 28),
                           const _SectionTitle(
                             'A little further out',
-                            trailing: 'HIGH / LOW',
+                            trailing: 'TAP TO FLIP',
                           ),
                           const SizedBox(height: 14),
-                          _Card(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              child: Column(
-                                children: [
-                                  for (var i = 0; i < f.days.length; i++) ...[
-                                    _DayRow(day: f.days[i], settings: s),
-                                    if (i < f.days.length - 1)
-                                      const Divider(
-                                        height: 1,
-                                        color: Color(0xffedf0e9),
-                                      ),
-                                  ],
-                                ],
+                          for (var i = 0; i < f.days.length; i++)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: DailyWeatherCard(
+                                key: ValueKey(
+                                  'card-day-${f.days[i].date ?? f.days[i].label}-${s.place.id}',
+                                ),
+                                forecast: f,
+                                day: f.days[i],
+                                index: i,
+                                settings: s,
+                                now: now,
+                                height: 240 * scale,
                               ),
                             ),
-                          ),
                           const SizedBox(height: 28),
                           const _SectionTitle('Outside, in detail'),
                           const SizedBox(height: 14),
@@ -345,303 +337,6 @@ class WeatherScreen extends StatelessWidget {
         ),
       );
     },
-  );
-}
-
-class _Hero extends StatelessWidget {
-  const _Hero({required this.forecast, required this.settings});
-  final Forecast forecast;
-  final Settings settings;
-  @override
-  Widget build(BuildContext context) => Container(
-    width: double.infinity,
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(30),
-      gradient: const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [Color(0xffd9eaf0), Color(0xffe6eee6), Color(0xfff1edda)],
-      ),
-    ),
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(30),
-      child: Stack(
-        children: [
-          Positioned(
-            right: -28,
-            top: 5,
-            child: IgnorePointer(
-              child: Opacity(
-                opacity: .6,
-                child: CustomPaint(
-                  size: const Size(220, 220),
-                  painter: _SkyPainter(conditionKind(forecast.summary)),
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(26),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: forecast.staleAt(DateTime.now()) ? orange : ink,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 7),
-                    Expanded(
-                      child: Text(
-                        forecast.staleAt(DateTime.now())
-                            ? 'SAVED WEATHER'
-                            : forecast.source == WeatherSource.nws
-                            ? 'CURRENT FORECAST'
-                            : 'CURRENT CONDITIONS',
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1.3,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '°${settings.fahrenheit ? 'F' : 'C'}',
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 18),
-                Text(
-                  settings.temperature(forecast.temperature),
-                  style: const TextStyle(
-                    fontSize: 96,
-                    height: 1.12,
-                    fontWeight: FontWeight.w300,
-                    letterSpacing: -7,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  forecast.summary,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: -.5,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  forecast.feelsLike == null
-                      ? '${forecast.source == WeatherSource.nws ? 'Forecast for' : 'Observed at'} ${DateFormat('h:mm a').format(settings.place.local(forecast.observedAt))}'
-                      : 'Feels like ${settings.temperature(forecast.feelsLike)}',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Color(0xff58736b),
-                  ),
-                ),
-                const SizedBox(height: 23),
-                Row(
-                  children: [
-                    const Icon(Icons.north_east, size: 14),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        settings.wind(forecast.wind),
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    const Icon(Icons.water_drop_outlined, size: 14),
-                    const SizedBox(width: 4),
-                    Text(
-                      forecast.humidity == null
-                          ? '—'
-                          : '${forecast.humidity!.round()}%',
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-class _SkyPainter extends CustomPainter {
-  const _SkyPainter(this.kind);
-  final String kind;
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width * .57, size.height * .42);
-    if (['sun', 'partly'].contains(kind)) {
-      canvas.drawCircle(
-        center,
-        80,
-        Paint()..color = const Color(0xffffd997).withValues(alpha: .22),
-      );
-      canvas.drawCircle(
-        center,
-        64,
-        Paint()..color = const Color(0xffffd18b).withValues(alpha: .38),
-      );
-      canvas.drawCircle(center, 46, Paint()..color = const Color(0xffefac61));
-      for (var i = 0; i < 12; i++) {
-        final angle = i * math.pi / 6;
-        canvas.drawLine(
-          center + Offset(math.cos(angle) * 56, math.sin(angle) * 56),
-          center + Offset(math.cos(angle) * 64, math.sin(angle) * 64),
-          Paint()
-            ..color = const Color(0xffe2a66a)
-            ..strokeWidth = 2
-            ..strokeCap = StrokeCap.round,
-        );
-      }
-    }
-    if (kind != 'sun') {
-      final cloud = Paint()..color = const Color(0xffa8c4c5);
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTWH(30, 110, 150, 45),
-          const Radius.circular(25),
-        ),
-        cloud,
-      );
-      canvas.drawCircle(const Offset(78, 110), 32, cloud);
-      canvas.drawCircle(const Offset(121, 104), 42, cloud);
-      if (kind == 'rain' || kind == 'storm') {
-        for (var i = 0; i < 4; i++) {
-          canvas.drawLine(
-            Offset(54 + i * 31, 167),
-            Offset(49 + i * 31, 180),
-            Paint()
-              ..color = const Color(0xff6a9eab)
-              ..strokeWidth = 3
-              ..strokeCap = StrokeCap.round,
-          );
-        }
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(_SkyPainter oldDelegate) => kind != oldDelegate.kind;
-}
-
-class _HourTile extends StatelessWidget {
-  const _HourTile({
-    required this.hour,
-    required this.settings,
-    required this.first,
-  });
-  final HourForecast hour;
-  final Settings settings;
-  final bool first;
-  @override
-  Widget build(BuildContext context) => Container(
-    width: 72,
-    padding: const EdgeInsets.symmetric(vertical: 15),
-    decoration: BoxDecoration(
-      color: first ? ink : Colors.white,
-      borderRadius: BorderRadius.circular(24),
-      border: first ? null : Border.all(color: const Color(0xffe9ede5)),
-    ),
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          DateFormat(
-            'ha',
-          ).format(settings.place.local(hour.time)).toLowerCase(),
-          style: TextStyle(fontSize: 11, color: first ? Colors.white70 : muted),
-        ),
-        Icon(
-          weatherIcon(hour.summary),
-          size: 24,
-          color: first ? const Color(0xffffcb88) : const Color(0xffc29154),
-        ),
-        Text(
-          settings.temperature(hour.temperature),
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w500,
-            color: first ? Colors.white : ink,
-          ),
-        ),
-        Text(
-          hour.rain == null ? '—' : '${hour.rain!.round()}%',
-          style: TextStyle(fontSize: 10, color: first ? Colors.white70 : muted),
-        ),
-      ],
-    ),
-  );
-}
-
-class _DayRow extends StatelessWidget {
-  const _DayRow({required this.day, required this.settings});
-  final DayForecast day;
-  final Settings settings;
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 14),
-    child: Row(
-      children: [
-        Expanded(
-          flex: 4,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                day.label,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 3),
-              Text(
-                day.summary,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 10, color: muted),
-              ),
-            ],
-          ),
-        ),
-        Icon(
-          weatherIcon(day.summary),
-          size: 22,
-          color: const Color(0xffbf9259),
-        ),
-        const SizedBox(width: 16),
-        SizedBox(
-          width: 31,
-          child: Text(
-            settings.temperature(day.high),
-            textAlign: TextAlign.right,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-          ),
-        ),
-        const SizedBox(width: 12),
-        SizedBox(
-          width: 31,
-          child: Text(
-            settings.temperature(day.low),
-            textAlign: TextAlign.right,
-            style: const TextStyle(fontSize: 16, color: muted),
-          ),
-        ),
-      ],
-    ),
   );
 }
 
@@ -1281,7 +976,7 @@ class SettingsSheet extends StatelessWidget {
                 const SizedBox(height: 16),
                 const Center(
                   child: Text(
-                    'DAYBREAK  /  1.3',
+                    'DAYBREAK  /  1.4',
                     style: TextStyle(
                       fontSize: 10,
                       color: muted,

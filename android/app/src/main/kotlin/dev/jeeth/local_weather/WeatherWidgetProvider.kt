@@ -78,7 +78,8 @@ abstract class CachedWeatherWidget(
                 views.setTextViewText(R.id.condition, summary)
             }
             if (details) {
-                views.setTextViewText(R.id.daily_range, "H $high  L $low")
+                views.setTextViewText(R.id.daily_high, "High $high")
+                views.setTextViewText(R.id.daily_low, "Low $low")
                 views.setImageViewBitmap(R.id.temperature_graph, graph)
                 views.setTextViewText(R.id.graph_time, graphTime)
                 views.setTextViewText(R.id.place, data.optString("place", "Daybreak"))
