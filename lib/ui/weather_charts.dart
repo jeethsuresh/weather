@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import '../models.dart';
+import 'forecast_chart_data.dart';
 import 'weather_style.dart';
 
 enum WeatherChartKind { temperature, precipitation }
@@ -16,12 +17,14 @@ class WeatherChart extends StatelessWidget {
     this.dark = false,
     this.low,
     this.high,
+    this.range,
   });
   final List<HourForecast> hours;
   final Settings settings;
   final WeatherChartKind kind;
   final bool dark;
   final double? low, high;
+  final ForecastChartRange? range;
   @override
   Widget build(BuildContext context) {
     final precipitation = kind == WeatherChartKind.precipitation;
@@ -61,6 +64,7 @@ class WeatherChart extends StatelessWidget {
             low,
             high,
             MediaQuery.textScalerOf(context).scale(1).clamp(1, 1.5).toDouble(),
+            range,
           ),
           size: Size.infinite,
         ),
@@ -78,6 +82,7 @@ class _WeatherChartPainter extends CustomPainter {
     this.low,
     this.high,
     this.scale,
+    this.range,
   );
   final List<HourForecast> hours;
   final Settings settings;
@@ -85,6 +90,7 @@ class _WeatherChartPainter extends CustomPainter {
   final bool dark;
   final double? low, high;
   final double scale;
+  final ForecastChartRange? range;
   @override
   void paint(Canvas canvas, Size size) {
     if (size.width < 30 || size.height < 24 || hours.isEmpty) return;
@@ -112,14 +118,14 @@ class _WeatherChartPainter extends CustomPainter {
             : math.max(high ?? valid.reduce(math.max), valid.reduce(math.max));
     final span = precip ? 100.0 : math.max(4.0, max - min);
     final mid = (min + max) / 2;
-    final start = hours.first.time.millisecondsSinceEpoch;
-    final duration = math.max(
-      3600000,
-      hours.last.time.millisecondsSinceEpoch - start,
-    );
-    double x(HourForecast h) =>
+    final startTime = range?.start ?? hours.first.time;
+    final endTime = range?.end ?? hours.last.time;
+    final start = startTime.millisecondsSinceEpoch;
+    final duration = math.max(3600000, endTime.millisecondsSinceEpoch - start);
+    double timeX(DateTime time) =>
         plot.left +
-        (h.time.millisecondsSinceEpoch - start) / duration * plot.width;
+        (time.millisecondsSinceEpoch - start) / duration * plot.width;
+    double x(HourForecast h) => timeX(h.time);
     double y(double v) =>
         plot.bottom -
         (precip ? v / 100 : (v - mid + span / 2) / span) * plot.height;
@@ -249,16 +255,25 @@ class _WeatherChartPainter extends CustomPainter {
       }
       canvas.restore();
     }
-    String time(HourForecast h) =>
-        DateFormat('ha').format(settings.place.local(h.time)).toLowerCase();
-    text(time(hours.first), Offset(plot.left, plot.bottom + 4));
-    if (size.width > 220 && hours.length > 3) {
-      final h = hours[hours.length ~/ 2];
-      text(time(h), Offset(x(h), plot.bottom + 4), align: TextAlign.center);
+    String time(DateTime at) {
+      final local = settings.place.local(at);
+      return DateFormat(
+        local.minute == 0 ? 'ha' : 'h:mma',
+      ).format(local).toLowerCase();
     }
-    if (hours.length > 1) {
+
+    text(time(startTime), Offset(plot.left, plot.bottom + 4));
+    if (size.width > 220) {
+      final middle = startTime.add(Duration(milliseconds: duration ~/ 2));
       text(
-        time(hours.last),
+        time(middle),
+        Offset(timeX(middle), plot.bottom + 4),
+        align: TextAlign.center,
+      );
+    }
+    if (endTime.isAfter(startTime)) {
+      text(
+        time(endTime),
         Offset(plot.right, plot.bottom + 4),
         align: TextAlign.right,
       );
@@ -274,6 +289,8 @@ class _WeatherChartPainter extends CustomPainter {
       old.dark != dark ||
       old.low != low ||
       old.high != high ||
+      old.range?.start != range?.start ||
+      old.range?.end != range?.end ||
       old.scale != scale;
 }
 
@@ -285,11 +302,13 @@ class TemperatureRangeChart extends StatelessWidget {
     required this.high,
     required this.low,
     this.dark = false,
+    this.range,
   });
   final List<HourForecast> hours;
   final Settings settings;
   final double? high, low;
   final bool dark;
+  final ForecastChartRange? range;
   @override
   Widget build(BuildContext context) {
     final fg = dark ? const Color(0xffe7f0df) : ink;
@@ -333,6 +352,7 @@ class TemperatureRangeChart extends StatelessWidget {
             dark: dark,
             high: high,
             low: low,
+            range: range,
           ),
         ),
         const SizedBox(width: 5),

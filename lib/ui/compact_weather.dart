@@ -172,14 +172,23 @@ class CompactWeatherView extends StatelessWidget {
                               height: currentHeight * scale,
                             ),
                             if (hours.isNotEmpty) ...[
-                              const SizedBox(height: 10),
-                              HoursWeatherCard(
+                              const Padding(
+                                padding: EdgeInsets.fromLTRB(8, 18, 8, 10),
+                                child: Text(
+                                  'THE HOURS AHEAD',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    letterSpacing: 1.7,
+                                    color: _soft,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              HourlyForecastStrip(
                                 key: ValueKey('card-hours-${s.place.id}'),
-                                forecast: f,
+                                hours: hours,
                                 settings: s,
-                                now: now,
                                 compact: true,
-                                height: 210 * scale,
                               ),
                             ],
                             if (f.days.isNotEmpty)

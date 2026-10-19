@@ -63,20 +63,71 @@ void main() {
       isNull,
     );
   });
+  test('today keeps the next twelve hours across local midnight', () {
+    final f = data();
+    final today = chartHoursForDay(f, f.days[0], Place.toronto, now);
+    expect(today.map((h) => h.time), [
+      for (var h = 0; h < 12; h++) DateTime.utc(2026, 10, 19, h),
+    ]);
+    final range = chartRangeForDay(f, f.days[0], Place.toronto, now)!;
+    expect(range.start, now);
+    expect(range.end, now.add(const Duration(hours: 12)));
+    expect(
+      chartHoursForDay(f, f.days[1], Place.toronto, now).first.time,
+      DateTime.utc(2026, 10, 19, 4),
+    );
+  });
   test(
-    'daily graph assigns hours by location date, even after UTC midnight',
+    'future days span local midnight to midnight, including the endpoint',
     () {
-      final f = data();
-      final today = chartHoursForDay(f, f.days[0], Place.toronto, now);
-      expect(today.map((h) => h.time), [
-        for (var h = 0; h < 4; h++) DateTime.utc(2026, 10, 19, h),
-      ]);
-      expect(
-        chartHoursForDay(f, f.days[1], Place.toronto, now).first.time,
-        DateTime.utc(2026, 10, 19, 4),
+      final f = data(
+        hours: [
+          for (var i = 0; i < 50; i++)
+            HourForecast(
+              time: DateTime.utc(2026, 10, 18, 23).add(Duration(hours: i)),
+              temperature: i.toDouble(),
+              summary: 'Sunny',
+            ),
+        ],
       );
+      final range = chartRangeForDay(f, f.days[1], Place.toronto, now)!;
+      expect(range.start.toUtc(), DateTime.utc(2026, 10, 19, 4));
+      expect(range.end.toUtc(), DateTime.utc(2026, 10, 20, 4));
+      final hours = chartHoursForDay(f, f.days[1], Place.toronto, now);
+      expect(hours.length, 25);
+      expect(hours.first.time.isAtSameMomentAs(range.start), isTrue);
+      expect(hours.last.time.isAtSameMomentAs(range.end), isTrue);
     },
   );
+  test('sparse forecasts keep the full chart window without filling gaps', () {
+    final f = data();
+    final range = upcomingChartRange(now);
+    expect(range.start, now);
+    expect(range.end.difference(range.start), const Duration(hours: 12));
+    final future = chartRangeForDay(f, f.days[1], Place.toronto, now)!;
+    final hours = future.hoursFrom(f);
+    expect(hours.last.time.isBefore(future.end), isTrue);
+    expect(future.end.difference(future.start), const Duration(hours: 24));
+  });
+  test('future day windows follow local midnight on both DST changes', () {
+    for (final (date, length) in [('2026-03-08', 23), ('2026-11-01', 25)]) {
+      final day = DayForecast(label: 'Sunday', date: date, summary: 'Cloudy');
+      final at = DateTime.parse('${date}T00:00:00Z');
+      final range = chartRangeForDay(data(), day, Place.toronto, at)!;
+      expect(range.end.difference(range.start), Duration(hours: length));
+      expect(Place.toronto.local(range.start).hour, 0);
+      expect(Place.toronto.local(range.end).hour, 0);
+      final hours = [
+        for (var i = 0; i <= length; i++)
+          HourForecast(
+            time: range.start.add(Duration(hours: i)),
+            temperature: 2,
+            summary: 'Cloudy',
+          ),
+      ];
+      expect(range.hoursFrom(data(hours: hours)).length, length + 1);
+    }
+  });
   test(
     'next-hours graph sorts timestamps, limits horizon and preserves gaps and null rain',
     () {
@@ -165,6 +216,38 @@ void main() {
   }
 
   testWidgets(
+    'hourly pips scroll through each hour with large Fahrenheit text',
+    (tester) async {
+      viewport(tester, const Size(390, 844));
+      final f = data();
+      const settings = Settings(fahrenheit: true);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: MediaQuery(
+              data: const MediaQueryData(textScaler: TextScaler.linear(2.5)),
+              child: HourlyForecastStrip(hours: f.hours, settings: settings),
+            ),
+          ),
+        ),
+      );
+      expect(find.byType(WeatherChart), findsNothing);
+      expect(find.text('23°'), findsOneWidget);
+      final scrollable = find.descendant(
+        of: find.byType(HourlyForecastStrip),
+        matching: find.byType(Scrollable),
+      );
+      await tester.scrollUntilVisible(
+        find.byKey(ValueKey('hour-pip-${f.hours.last.time.toIso8601String()}')),
+        200,
+        scrollable: scrollable,
+      );
+      expect(find.text('50°'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
     'main cards flip from temperature to precipitation and retain the face when folded',
     (tester) async {
       viewport(tester, const Size(390, 844));
@@ -179,6 +262,8 @@ void main() {
         tester.widget<WeatherChart>(charts()).kind,
         WeatherChartKind.temperature,
       );
+      final range = tester.widget<WeatherChart>(charts()).range!;
+      expect(range.end.difference(range.start), const Duration(hours: 12));
       await tester.tap(charts());
       await tester.pumpAndSettle();
       expect(
@@ -197,6 +282,34 @@ void main() {
       c.dispose();
     },
   );
+  testWidgets('future cards pass the full day window to both chart faces', (
+    tester,
+  ) async {
+    final f = data();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: DailyWeatherCard(
+            forecast: f,
+            day: f.days[1],
+            index: 1,
+            settings: const Settings(),
+            now: now,
+            height: 240,
+          ),
+        ),
+      ),
+    );
+    for (final kind in WeatherChartKind.values) {
+      final chart = tester.widget<WeatherChart>(find.byType(WeatherChart));
+      expect(chart.kind, kind);
+      expect(chart.range!.start.toUtc(), DateTime.utc(2026, 10, 19, 4));
+      expect(chart.range!.end.toUtc(), DateTime.utc(2026, 10, 20, 4));
+      await tester.tap(find.byKey(const ValueKey('flip-day-1')));
+      await tester.pumpAndSettle();
+    }
+    expect(tester.takeException(), isNull);
+  });
   testWidgets(
     'daily graph sits between high and low, with precipitation on the back',
     (tester) async {
@@ -220,8 +333,11 @@ void main() {
       expect(tester.getRect(chart).right, lessThan(tester.getRect(low).left));
       final f = c.forecast!;
       expect(
-        find.text(
-          forecastDayHeading(f.days.first, f, c.settings.place).toUpperCase(),
+        find.descendant(
+          of: card,
+          matching: find.text(
+            forecastDayHeading(f.days.first, f, c.settings.place).toUpperCase(),
+          ),
         ),
         findsOneWidget,
       );

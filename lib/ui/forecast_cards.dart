@@ -24,7 +24,8 @@ class CurrentWeatherCard extends StatelessWidget {
   final bool compact;
   @override
   Widget build(BuildContext context) {
-    final hours = upcomingChartHours(forecast, now);
+    final range = upcomingChartRange(now);
+    final hours = range.hoursFrom(forecast);
     final today = todayForecast(forecast, settings.place, now);
     return FlipWeatherCard(
       id: 'current',
@@ -37,11 +38,13 @@ class CurrentWeatherCard extends StatelessWidget {
         forecast: forecast,
         settings: settings,
         hours: hours,
+        range: range,
         today: today,
         compact: compact,
       ),
       back: _PrecipitationBack(
         hours: hours,
+        range: range,
         settings: settings,
         probabilityValue: hours.firstOrNull?.rain,
         metrics: [
@@ -54,65 +57,36 @@ class CurrentWeatherCard extends StatelessWidget {
   }
 }
 
-class HoursWeatherCard extends StatelessWidget {
-  const HoursWeatherCard({
+class HourlyForecastStrip extends StatelessWidget {
+  const HourlyForecastStrip({
     super.key,
-    required this.forecast,
+    required this.hours,
     required this.settings,
-    required this.now,
-    required this.height,
     this.compact = false,
   });
-  final Forecast forecast;
+  final List<HourForecast> hours;
   final Settings settings;
-  final DateTime now;
-  final double height;
   final bool compact;
   @override
   Widget build(BuildContext context) {
-    final hours = upcomingChartHours(forecast, now);
-    return FlipWeatherCard(
-      id: 'hours',
-      storageId: '${settings.place.id}-${forecast.source.name}-hours',
-      title: 'THE NEXT 12 HOURS',
-      paper: !compact,
-      height: height,
-      front: Column(
-        children: [
-          Expanded(
-            child: TemperatureRangeChart(
-              hours: hours,
+    final scale =
+        MediaQuery.textScalerOf(context).scale(1).clamp(1, 2.5).toDouble();
+    return SizedBox(
+      height: (compact ? 132 : 150) * scale,
+      child: ListView.separated(
+        key: const PageStorageKey('hourly-pips'),
+        scrollDirection: Axis.horizontal,
+        itemCount: hours.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder:
+            (_, i) => _HourPip(
+              key: ValueKey('hour-pip-${hours[i].time.toIso8601String()}'),
+              hour: hours[i],
               settings: settings,
-              high: highestHour(hours),
-              low: lowestHour(hours),
+              first: i == 0,
               dark: compact,
+              width: 72 * scale.clamp(1, 1.5),
             ),
-          ),
-          const SizedBox(height: 6),
-          _HourReadings(
-            hours: hours.take(4).toList(),
-            settings: settings,
-            dark: compact,
-          ),
-        ],
-      ),
-      back: _PrecipitationBack(
-        hours: hours,
-        settings: settings,
-        dark: compact,
-        probabilityValue: hours.firstOrNull?.rain,
-        metrics:
-            hours
-                .take(4)
-                .map(
-                  (h) => CardMetric(
-                    DateFormat(
-                      'ha',
-                    ).format(settings.place.local(h.time)).toLowerCase(),
-                    settings.wind(h.wind),
-                  ),
-                )
-                .toList(),
       ),
     );
   }
@@ -138,7 +112,8 @@ class DailyWeatherCard extends StatelessWidget {
   final bool compact;
   @override
   Widget build(BuildContext context) {
-    final hours = chartHoursForDay(forecast, day, settings.place, now);
+    final range = chartRangeForDay(forecast, day, settings.place, now);
+    final hours = range?.hoursFrom(forecast) ?? <HourForecast>[];
     final fg = compact ? _paper : ink;
     final date = forecastDayDate(day, forecast, settings.place);
     return FlipWeatherCard(
@@ -173,6 +148,7 @@ class DailyWeatherCard extends StatelessWidget {
           Expanded(
             child: TemperatureRangeChart(
               hours: hours,
+              range: range,
               settings: settings,
               high: day.high,
               low: day.low,
@@ -183,6 +159,7 @@ class DailyWeatherCard extends StatelessWidget {
       ),
       back: _PrecipitationBack(
         hours: hours,
+        range: range,
         settings: settings,
         dark: compact,
         probabilityValue: day.rain,
@@ -201,12 +178,14 @@ class _CurrentFront extends StatelessWidget {
     required this.forecast,
     required this.settings,
     required this.hours,
+    required this.range,
     required this.today,
     required this.compact,
   });
   final Forecast forecast;
   final Settings settings;
   final List<HourForecast> hours;
+  final ForecastChartRange range;
   final DayForecast? today;
   final bool compact;
   @override
@@ -268,6 +247,7 @@ class _CurrentFront extends StatelessWidget {
           height: (compact ? 44 : 76) * scale,
           child: TemperatureRangeChart(
             hours: hours,
+            range: range,
             settings: settings,
             high: today?.high,
             low: today?.low,
@@ -288,11 +268,13 @@ class _PrecipitationBack extends StatelessWidget {
     required this.hours,
     required this.settings,
     required this.metrics,
+    this.range,
     this.probabilityValue,
     this.dark = false,
     this.daily = false,
   });
   final List<HourForecast> hours;
+  final ForecastChartRange? range;
   final Settings settings;
   final List<CardMetric> metrics;
   final double? probabilityValue;
@@ -337,6 +319,7 @@ class _PrecipitationBack extends StatelessWidget {
           child: WeatherChart(
             key: const ValueKey('precipitation-graph'),
             hours: hours,
+            range: range,
             settings: settings,
             kind: WeatherChartKind.precipitation,
             dark: dark,
@@ -394,45 +377,80 @@ class _PrecipitationBack extends StatelessWidget {
   }
 }
 
-class _HourReadings extends StatelessWidget {
-  const _HourReadings({
-    required this.hours,
+class _HourPip extends StatelessWidget {
+  const _HourPip({
+    super.key,
+    required this.hour,
     required this.settings,
+    required this.first,
     required this.dark,
+    required this.width,
   });
-  final List<HourForecast> hours;
+  final HourForecast hour;
   final Settings settings;
-  final bool dark;
+  final bool first, dark;
+  final double width;
   @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      for (final hour in hours)
-        Expanded(
-          child: Column(
-            children: [
-              Text(
-                DateFormat(
-                  'ha',
-                ).format(settings.place.local(hour.time)).toLowerCase(),
-                style: TextStyle(
-                  color: dark ? _paper.withValues(alpha: .65) : muted,
-                  fontSize: 9,
-                ),
-              ),
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  settings.temperature(hour.temperature),
-                  style: TextStyle(
-                    color: dark ? _paper : ink,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w500,
+  Widget build(BuildContext context) {
+    final lightText = first || dark;
+    final fg = lightText ? _paper : ink;
+    final secondary = lightText ? _paper.withValues(alpha: .7) : muted;
+    return Semantics(
+      label: '${hour.summary}, precipitation chance ${probability(hour.rain)}',
+      child: Container(
+        width: width,
+        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 4),
+        decoration: BoxDecoration(
+          color:
+              first
+                  ? ink
+                  : dark
+                  ? const Color(0xff233d36)
+                  : Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border:
+              first
+                  ? null
+                  : Border.all(
+                    color:
+                        dark
+                            ? const Color(0xff385149)
+                            : const Color(0xffe9ede5),
                   ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              DateFormat(
+                'ha',
+              ).format(settings.place.local(hour.time)).toLowerCase(),
+              style: TextStyle(fontSize: 11, color: secondary),
+            ),
+            Icon(
+              weatherIcon(hour.summary),
+              size: 24,
+              color:
+                  lightText ? const Color(0xffffcb88) : const Color(0xffc29154),
+            ),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                settings.temperature(hour.temperature),
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w500,
+                  color: fg,
                 ),
               ),
-            ],
-          ),
+            ),
+            Text(
+              probability(hour.rain),
+              style: TextStyle(fontSize: 10, color: secondary),
+            ),
+          ],
         ),
-    ],
-  );
+      ),
+    );
+  }
 }

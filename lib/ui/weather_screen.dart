@@ -186,7 +186,7 @@ class WeatherScreen extends StatelessWidget {
                           const SizedBox(height: 6),
                           _SectionTitle(
                             'The hours ahead',
-                            trailing: '12 HOURS',
+                            trailing: '${hours.length} HOURS',
                           ),
                           const SizedBox(height: 14),
                           if (hours.isEmpty)
@@ -199,12 +199,10 @@ class WeatherScreen extends StatelessWidget {
                               ),
                             )
                           else
-                            HoursWeatherCard(
+                            HourlyForecastStrip(
                               key: ValueKey('card-hours-${s.place.id}'),
-                              forecast: f,
+                              hours: hours,
                               settings: s,
-                              now: now,
-                              height: 255 * scale,
                             ),
                           const SizedBox(height: 28),
                           const _SectionTitle(

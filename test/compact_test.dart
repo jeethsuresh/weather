@@ -13,6 +13,8 @@ import 'dart:async';
 import 'package:local_weather/models.dart';
 import 'package:local_weather/repository.dart';
 import 'package:local_weather/ui/compact_weather.dart';
+import 'package:local_weather/ui/forecast_cards.dart';
+import 'package:local_weather/ui/weather_charts.dart';
 import 'package:local_weather/weather_api.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'support.dart';
@@ -155,14 +157,27 @@ void main() {
         expect(find.text('Mainly sunny'), findsNothing);
         expect(tester.takeException(), isNull);
         await tester.scrollUntilVisible(
-          find.byKey(const ValueKey('flip-hours')),
+          find.byType(HourlyForecastStrip),
           100,
           scrollable: find.byType(Scrollable).first,
         );
         await tester.pumpAndSettle();
-        await tester.tap(find.byKey(const ValueKey('flip-hours')));
+        final strip = find.byType(HourlyForecastStrip);
+        expect(
+          find.descendant(of: strip, matching: find.byType(WeatherChart)),
+          findsNothing,
+        );
+        final list = find.descendant(
+          of: strip,
+          matching: find.byType(ListView),
+        );
+        expect(tester.widget<ListView>(list).scrollDirection, Axis.horizontal);
+        await tester.drag(list, const Offset(-600, 0));
         await tester.pumpAndSettle();
-        expect(find.text('18 km/h'), findsOneWidget);
+        expect(
+          find.descendant(of: strip, matching: find.text('9°')),
+          findsOneWidget,
+        );
         expect(tester.takeException(), isNull);
         await tester.scrollUntilVisible(
           find.byKey(const ValueKey('flip-day-0')),
