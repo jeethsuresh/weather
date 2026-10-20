@@ -31,7 +31,7 @@ class CurrentWeatherCard extends StatelessWidget {
       id: 'current',
       storageId: '${settings.place.id}-${forecast.source.name}-current',
       title:
-          '${forecast.source == WeatherSource.nws ? 'CURRENT FORECAST' : 'RIGHT NOW'} · °${settings.fahrenheit ? 'F' : 'C'}',
+          '${forecast.source == WeatherSource.nws ? 'CURRENT FORECAST' : 'RIGHT NOW'} · °${settings.fahrenheit ? 'F' : 'C'} · NEXT 24H',
       light: true,
       height: height,
       front: _CurrentFront(
@@ -71,13 +71,27 @@ class HourlyForecastStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     final scale =
         MediaQuery.textScalerOf(context).scale(1).clamp(1, 2.5).toDouble();
-    return SizedBox(
-      height: (compact ? 132 : 150) * scale,
+    final divider = compact ? const Color(0xff385149) : const Color(0xffe0e8df);
+    return Container(
+      decoration: BoxDecoration(
+        color: compact ? const Color(0xff233d36) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: divider),
+      ),
+      clipBehavior: Clip.antiAlias,
+      height: 96 * scale,
       child: ListView.separated(
         key: const PageStorageKey('hourly-pips'),
         scrollDirection: Axis.horizontal,
         itemCount: hours.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        separatorBuilder:
+            (_, _) => VerticalDivider(
+              width: 1,
+              thickness: 1,
+              indent: 8,
+              endIndent: 8,
+              color: divider,
+            ),
         itemBuilder:
             (_, i) => _HourPip(
               key: ValueKey('hour-pip-${hours[i].time.toIso8601String()}'),
@@ -85,88 +99,142 @@ class HourlyForecastStrip extends StatelessWidget {
               settings: settings,
               first: i == 0,
               dark: compact,
-              width: 72 * scale.clamp(1, 1.5),
+              width: 60 * scale.clamp(1, 1.8),
             ),
       ),
     );
   }
 }
 
-class DailyWeatherCard extends StatelessWidget {
-  const DailyWeatherCard({
+class DailyForecastList extends StatelessWidget {
+  const DailyForecastList({
     super.key,
     required this.forecast,
-    required this.day,
-    required this.index,
     required this.settings,
-    required this.now,
-    required this.height,
     this.compact = false,
   });
   final Forecast forecast;
-  final DayForecast day;
-  final int index;
   final Settings settings;
-  final DateTime now;
-  final double height;
   final bool compact;
   @override
   Widget build(BuildContext context) {
-    final range = chartRangeForDay(forecast, day, settings.place, now);
-    final hours = range?.hoursFrom(forecast) ?? <HourForecast>[];
     final fg = compact ? _paper : ink;
-    final date = forecastDayDate(day, forecast, settings.place);
-    return FlipWeatherCard(
-      id: 'day-$index',
-      storageId:
-          '${settings.place.id}-${forecast.source.name}-day-${date ?? day.label}',
-      title: forecastDayHeading(day, forecast, settings.place).toUpperCase(),
-      paper: !compact,
-      height: height,
-      front: Column(
-        children: [
-          Row(
-            children: [
-              Icon(
-                weatherIcon(day.summary),
-                size: 26,
-                color:
-                    compact ? const Color(0xffedbf82) : const Color(0xffb47b3e),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  day.summary,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: fg, fontSize: 13),
-                ),
-              ),
-            ],
+    final secondary = compact ? _paper.withValues(alpha: .65) : muted;
+    final divider = compact ? const Color(0xff385149) : const Color(0xffe0e8df);
+    final scale =
+        MediaQuery.textScalerOf(context).scale(1).clamp(1, 1.5).toDouble();
+    Widget reading(double? value, {bool low = false}) => SizedBox(
+      width: 36 * scale,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.centerRight,
+        child: Text(
+          settings.temperature(value),
+          style: TextStyle(
+            color: low ? secondary : fg,
+            fontSize: 16,
+            fontWeight: low ? FontWeight.w400 : FontWeight.w600,
           ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: TemperatureRangeChart(
-              hours: hours,
-              range: range,
-              settings: settings,
-              high: day.high,
-              low: day.low,
-              dark: compact,
-            ),
-          ),
-        ],
+        ),
       ),
-      back: _PrecipitationBack(
-        hours: hours,
-        range: range,
-        settings: settings,
-        dark: compact,
-        probabilityValue: day.rain,
-        daily: true,
-        metrics: [
-          CardMetric('Peak wind', settings.wind(day.windMax)),
-          CardMetric('Forecast chance', probability(day.rain)),
+    );
+    return Container(
+      decoration: BoxDecoration(
+        color: compact ? const Color(0xff233d36) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: divider),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (var i = 0; i < forecast.days.length; i++) ...[
+            if (i > 0)
+              Divider(
+                height: 1,
+                thickness: 1,
+                indent: 12,
+                endIndent: 12,
+                color: divider,
+              ),
+            Builder(
+              builder: (context) {
+                final day = forecast.days[i];
+                final date = forecastDayDate(day, forecast, settings.place);
+                return Semantics(
+                  key: ValueKey('forecast-day-$i'),
+                  label:
+                      '${forecastDayHeading(day, forecast, settings.place)}, ${day.summary}, high ${settings.temperature(day.high)}, low ${settings.temperature(day.low)}',
+                  excludeSemantics: true,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 54 * scale,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                date == null
+                                    ? day.label
+                                    : DateFormat('EEE').format(date),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: fg,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  height: 1.1,
+                                ),
+                              ),
+                              if (date != null)
+                                Text(
+                                  DateFormat('MMM d').format(date),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: secondary,
+                                    fontSize: 10,
+                                    height: 1.1,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          weatherIcon(day.summary),
+                          size: 18,
+                          color:
+                              compact
+                                  ? const Color(0xffedbf82)
+                                  : const Color(0xffb47b3e),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            day.summary,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(color: fg, fontSize: 11),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        reading(day.high),
+                        const SizedBox(width: 6),
+                        reading(day.low, low: true),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
         ],
       ),
     );
@@ -270,18 +338,15 @@ class _PrecipitationBack extends StatelessWidget {
     required this.metrics,
     this.range,
     this.probabilityValue,
-    this.dark = false,
-    this.daily = false,
   });
   final List<HourForecast> hours;
   final ForecastChartRange? range;
   final Settings settings;
   final List<CardMetric> metrics;
   final double? probabilityValue;
-  final bool dark, daily;
   @override
   Widget build(BuildContext context) {
-    final fg = dark ? _paper : ink;
+    const fg = ink;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -295,7 +360,7 @@ class _PrecipitationBack extends StatelessWidget {
             const SizedBox(width: 5),
             Expanded(
               child: Text(
-                daily ? 'Daily precipitation chance' : 'Precipitation chance',
+                'Precipitation chance',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
@@ -322,7 +387,6 @@ class _PrecipitationBack extends StatelessWidget {
             range: range,
             settings: settings,
             kind: WeatherChartKind.precipitation,
-            dark: dark,
           ),
         ),
         const SizedBox(height: 4),
@@ -399,25 +463,8 @@ class _HourPip extends StatelessWidget {
       label: '${hour.summary}, precipitation chance ${probability(hour.rain)}',
       child: Container(
         width: width,
-        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 4),
-        decoration: BoxDecoration(
-          color:
-              first
-                  ? ink
-                  : dark
-                  ? const Color(0xff233d36)
-                  : Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border:
-              first
-                  ? null
-                  : Border.all(
-                    color:
-                        dark
-                            ? const Color(0xff385149)
-                            : const Color(0xffe9ede5),
-                  ),
-        ),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        color: first ? ink : Colors.transparent,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -429,7 +476,7 @@ class _HourPip extends StatelessWidget {
             ),
             Icon(
               weatherIcon(hour.summary),
-              size: 24,
+              size: 20,
               color:
                   lightText ? const Color(0xffffcb88) : const Color(0xffc29154),
             ),
@@ -438,7 +485,7 @@ class _HourPip extends StatelessWidget {
               child: Text(
                 settings.temperature(hour.temperature),
                 style: TextStyle(
-                  fontSize: 22,
+                  fontSize: 18,
                   fontWeight: FontWeight.w500,
                   color: fg,
                 ),

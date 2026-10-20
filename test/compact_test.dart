@@ -57,6 +57,8 @@ Future<void> loadFonts() async {
 WeatherController compactController({LocationLookup? locationLookup}) {
   final now = DateTime.now().toUtc();
   final start = DateTime.utc(now.year, now.month, now.day, now.hour + 1);
+  final local = Place.toronto.local(now);
+  final today = DateTime.utc(local.year, local.month, local.day);
   final f = Forecast(
     source: WeatherSource.canada,
     fetchedAt: now,
@@ -79,17 +81,8 @@ WeatherController compactController({LocationLookup? locationLookup}) {
     days: List.generate(
       7,
       (i) => DayForecast(
-        label:
-            i == 0
-                ? 'Today'
-                : [
-                  'Monday',
-                  'Tuesday',
-                  'Wednesday',
-                  'Thursday',
-                  'Friday',
-                  'Saturday',
-                ][i - 1],
+        label: i == 0 ? 'Today' : 'Day $i',
+        date: today.add(Duration(days: i)).toIso8601String().substring(0, 10),
         summary: i % 2 == 0 ? 'Partly cloudy' : 'Rain showers',
         high: 17 + i.toDouble(),
         low: 6 + i.toDouble(),
@@ -180,15 +173,28 @@ void main() {
         );
         expect(tester.takeException(), isNull);
         await tester.scrollUntilVisible(
-          find.byKey(const ValueKey('flip-day-0')),
+          find.byKey(const ValueKey('forecast-day-0')),
           100,
           scrollable: find.byType(Scrollable).first,
         );
         await tester.pumpAndSettle();
-        await tester.tap(find.byKey(const ValueKey('flip-day-0')));
-        await tester.pumpAndSettle();
-        expect(find.text('Peak wind'), findsOneWidget);
-        expect(find.text('24 km/h'), findsOneWidget);
+        final row = find.byKey(const ValueKey('forecast-day-0'));
+        expect(tester.getSize(row).height, lessThanOrEqualTo(44));
+        expect(
+          find.descendant(of: row, matching: find.text('17°')),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(of: row, matching: find.text('6°')),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(
+            of: find.byType(DailyForecastList),
+            matching: find.byType(WeatherChart),
+          ),
+          findsNothing,
+        );
         expect(tester.takeException(), isNull);
         await tester.scrollUntilVisible(
           find.byKey(const ValueKey('flip-current')),
@@ -353,7 +359,7 @@ void main() {
     await tester.pumpAndSettle();
     await save('cover-back');
     await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('flip-day-0')),
+      find.byKey(const ValueKey('forecast-day-0')),
       100,
       scrollable: find.byType(Scrollable).first,
     );

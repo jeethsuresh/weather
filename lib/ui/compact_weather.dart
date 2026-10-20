@@ -173,7 +173,7 @@ class CompactWeatherView extends StatelessWidget {
                             ),
                             if (hours.isNotEmpty) ...[
                               const Padding(
-                                padding: EdgeInsets.fromLTRB(8, 18, 8, 10),
+                                padding: EdgeInsets.fromLTRB(8, 12, 8, 6),
                                 child: Text(
                                   'THE HOURS AHEAD',
                                   style: TextStyle(
@@ -193,32 +193,36 @@ class CompactWeatherView extends StatelessWidget {
                             ],
                             if (f.days.isNotEmpty)
                               const Padding(
-                                padding: EdgeInsets.fromLTRB(8, 18, 8, 10),
-                                child: Text(
-                                  'A LITTLE FURTHER OUT',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    letterSpacing: 1.7,
-                                    color: _soft,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                padding: EdgeInsets.fromLTRB(8, 12, 8, 6),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        'A LITTLE FURTHER OUT',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          letterSpacing: 1.7,
+                                          color: _soft,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                    Text(
+                                      'HIGH / LOW',
+                                      style: TextStyle(
+                                        fontSize: 8,
+                                        color: _soft,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            for (var i = 0; i < f.days.length; i++)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 10),
-                                child: DailyWeatherCard(
-                                  key: ValueKey(
-                                    'card-day-${f.days[i].date ?? f.days[i].label}-${s.place.id}',
-                                  ),
-                                  forecast: f,
-                                  day: f.days[i],
-                                  index: i,
-                                  settings: s,
-                                  now: now,
-                                  compact: true,
-                                  height: 210 * scale,
-                                ),
+                            if (f.days.isNotEmpty)
+                              DailyForecastList(
+                                key: ValueKey('forecast-days-${s.place.id}'),
+                                forecast: f,
+                                settings: s,
+                                compact: true,
                               ),
                             for (final alert in f.alerts.where(
                               (a) =>

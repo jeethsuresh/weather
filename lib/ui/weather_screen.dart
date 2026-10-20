@@ -160,9 +160,9 @@ class WeatherScreen extends StatelessWidget {
                             forecast: f,
                             settings: s,
                             now: now,
-                            height: 330 * scale,
+                            height: 280 * scale,
                           ),
-                          const SizedBox(height: 18),
+                          const SizedBox(height: 12),
                           if (controller.error != null || f.staleAt(now))
                             _Notice(
                               controller.error ??
@@ -188,7 +188,7 @@ class WeatherScreen extends StatelessWidget {
                             'The hours ahead',
                             trailing: '${hours.length} HOURS',
                           ),
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 8),
                           if (hours.isEmpty)
                             const _Card(
                               child: Padding(
@@ -204,28 +204,19 @@ class WeatherScreen extends StatelessWidget {
                               hours: hours,
                               settings: s,
                             ),
-                          const SizedBox(height: 28),
+                          const SizedBox(height: 16),
                           const _SectionTitle(
                             'A little further out',
-                            trailing: 'TAP TO FLIP',
+                            trailing: 'HIGH / LOW',
                           ),
-                          const SizedBox(height: 14),
-                          for (var i = 0; i < f.days.length; i++)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: DailyWeatherCard(
-                                key: ValueKey(
-                                  'card-day-${f.days[i].date ?? f.days[i].label}-${s.place.id}',
-                                ),
-                                forecast: f,
-                                day: f.days[i],
-                                index: i,
-                                settings: s,
-                                now: now,
-                                height: 240 * scale,
-                              ),
+                          const SizedBox(height: 8),
+                          if (f.days.isNotEmpty)
+                            DailyForecastList(
+                              key: ValueKey('forecast-days-${s.place.id}'),
+                              forecast: f,
+                              settings: s,
                             ),
-                          const SizedBox(height: 28),
+                          const SizedBox(height: 16),
                           const _SectionTitle('Outside, in detail'),
                           const SizedBox(height: 14),
                           LayoutBuilder(

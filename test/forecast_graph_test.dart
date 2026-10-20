@@ -16,40 +16,43 @@ void main() {
   tzdata.initializeTimeZones();
   setUpAll(loadFonts);
   final now = DateTime.utc(2026, 10, 18, 23, 30);
-  Forecast data({List<HourForecast>? hours}) => Forecast(
-    source: WeatherSource.canada,
-    fetchedAt: now,
-    observedAt: now,
-    temperature: -2,
-    summary: 'Cloudy',
-    days: const [
-      DayForecast(
-        label: 'Sunday',
-        date: '2026-10-18',
+  Forecast data({List<HourForecast>? hours, List<DayForecast>? days}) =>
+      Forecast(
+        source: WeatherSource.canada,
+        fetchedAt: now,
+        observedAt: now,
+        temperature: -2,
         summary: 'Cloudy',
-        high: 4,
-        low: -5,
-      ),
-      DayForecast(
-        label: 'Monday',
-        date: '2026-10-19',
-        summary: 'Rain',
-        high: 6,
-        low: -3,
-      ),
-    ],
-    hours:
-        hours ??
-        List.generate(
-          16,
-          (i) => HourForecast(
-            time: DateTime.utc(2026, 10, 18, 23).add(Duration(hours: i)),
-            temperature: -5 + i.toDouble(),
-            summary: 'Cloudy',
-            rain: i == 2 ? null : i * 5,
-          ),
-        ),
-  );
+        days:
+            days ??
+            const [
+              DayForecast(
+                label: 'Sunday',
+                date: '2026-10-18',
+                summary: 'Cloudy',
+                high: 4,
+                low: -5,
+              ),
+              DayForecast(
+                label: 'Monday',
+                date: '2026-10-19',
+                summary: 'Rain',
+                high: 6,
+                low: -3,
+              ),
+            ],
+        hours:
+            hours ??
+            List.generate(
+              16,
+              (i) => HourForecast(
+                time: DateTime.utc(2026, 10, 18, 23).add(Duration(hours: i)),
+                temperature: -5 + i.toDouble(),
+                summary: 'Cloudy',
+                rain: i == 2 ? null : i * 5,
+              ),
+            ),
+      );
 
   test('daily heading includes weekday and calendar date', () {
     final f = data();
@@ -63,69 +66,43 @@ void main() {
       isNull,
     );
   });
-  test('today keeps the next twelve hours across local midnight', () {
-    final f = data();
-    final today = chartHoursForDay(f, f.days[0], Place.toronto, now);
-    expect(today.map((h) => h.time), [
-      for (var h = 0; h < 12; h++) DateTime.utc(2026, 10, 19, h),
-    ]);
-    final range = chartRangeForDay(f, f.days[0], Place.toronto, now)!;
-    expect(range.start, now);
-    expect(range.end, now.add(const Duration(hours: 12)));
-    expect(
-      chartHoursForDay(f, f.days[1], Place.toronto, now).first.time,
-      DateTime.utc(2026, 10, 19, 4),
-    );
-  });
-  test(
-    'future days span local midnight to midnight, including the endpoint',
-    () {
-      final f = data(
-        hours: [
-          for (var i = 0; i < 50; i++)
-            HourForecast(
-              time: DateTime.utc(2026, 10, 18, 23).add(Duration(hours: i)),
-              temperature: i.toDouble(),
-              summary: 'Sunny',
-            ),
-        ],
-      );
-      final range = chartRangeForDay(f, f.days[1], Place.toronto, now)!;
-      expect(range.start.toUtc(), DateTime.utc(2026, 10, 19, 4));
-      expect(range.end.toUtc(), DateTime.utc(2026, 10, 20, 4));
-      final hours = chartHoursForDay(f, f.days[1], Place.toronto, now);
-      expect(hours.length, 25);
-      expect(hours.first.time.isAtSameMomentAs(range.start), isTrue);
-      expect(hours.last.time.isAtSameMomentAs(range.end), isTrue);
-    },
-  );
-  test('sparse forecasts keep the full chart window without filling gaps', () {
-    final f = data();
-    final range = upcomingChartRange(now);
-    expect(range.start, now);
-    expect(range.end.difference(range.start), const Duration(hours: 12));
-    final future = chartRangeForDay(f, f.days[1], Place.toronto, now)!;
-    final hours = future.hoursFrom(f);
-    expect(hours.last.time.isBefore(future.end), isTrue);
-    expect(future.end.difference(future.start), const Duration(hours: 24));
-  });
-  test('future day windows follow local midnight on both DST changes', () {
-    for (final (date, length) in [('2026-03-08', 23), ('2026-11-01', 25)]) {
-      final day = DayForecast(label: 'Sunday', date: date, summary: 'Cloudy');
-      final at = DateTime.parse('${date}T00:00:00Z');
-      final range = chartRangeForDay(data(), day, Place.toronto, at)!;
-      expect(range.end.difference(range.start), Duration(hours: length));
-      expect(Place.toronto.local(range.start).hour, 0);
-      expect(Place.toronto.local(range.end).hour, 0);
-      final hours = [
-        for (var i = 0; i <= length; i++)
+  test('main graph spans the next 24 hours across local midnight', () {
+    final f = data(
+      hours: [
+        for (var i = 0; i < 32; i++)
           HourForecast(
-            time: range.start.add(Duration(hours: i)),
-            temperature: 2,
-            summary: 'Cloudy',
+            time: DateTime.utc(2026, 10, 18, 23).add(Duration(hours: i)),
+            temperature: i.toDouble(),
+            summary: 'Sunny',
           ),
-      ];
-      expect(range.hoursFrom(data(hours: hours)).length, length + 1);
+      ],
+    );
+    final range = upcomingChartRange(now);
+    final hours = range.hoursFrom(f);
+    expect(range.start, now);
+    expect(range.end, now.add(const Duration(hours: 24)));
+    expect(hours.map((h) => h.time), [
+      for (var h = 0; h < 24; h++) DateTime.utc(2026, 10, 19, h),
+    ]);
+  });
+  test('sparse forecasts keep the full 24 hour axis without filling gaps', () {
+    final range = upcomingChartRange(now);
+    final hours = range.hoursFrom(data());
+    expect(range.end.difference(range.start), const Duration(hours: 24));
+    expect(hours.last.time.isBefore(range.end), isTrue);
+    expect(hours.length, 15);
+  });
+  test('next 24 hours remain an elapsed day across both DST changes', () {
+    for (final at in [
+      DateTime.utc(2026, 3, 8, 4),
+      DateTime.utc(2026, 11, 1, 4),
+    ]) {
+      final range = upcomingChartRange(at);
+      expect(range.end.difference(range.start), const Duration(hours: 24));
+      expect(
+        Place.toronto.local(range.start).timeZoneOffset,
+        isNot(Place.toronto.local(range.end).timeZoneOffset),
+      );
     }
   });
   test(
@@ -151,7 +128,7 @@ void main() {
             rain: 0,
           ),
           HourForecast(
-            time: now.add(const Duration(hours: 13)),
+            time: now.add(const Duration(hours: 25)),
             temperature: 10,
             summary: 'Sunny',
           ),
@@ -165,8 +142,6 @@ void main() {
         hours.last.time.difference(hours.first.time),
         const Duration(hours: 5),
       );
-      expect(highestHour(hours), 0);
-      expect(lowestHour(hours), -2);
     },
   );
   test(
@@ -177,7 +152,6 @@ void main() {
       expect(forecastDayHeading(legacy, f, Place.toronto), 'Sunday · Oct 18');
       const unknown = DayForecast(label: 'Later', summary: 'Cloudy');
       expect(forecastDayDate(unknown, f, Place.toronto), isNull);
-      expect(chartHoursForDay(f, unknown, Place.toronto, now), isEmpty);
     },
   );
   test('DST repeated local hours remain distinct absolute chart samples', () {
@@ -233,6 +207,13 @@ void main() {
       );
       expect(find.byType(WeatherChart), findsNothing);
       expect(find.text('23°'), findsOneWidget);
+      final first = tester.getRect(
+        find.byKey(ValueKey('hour-pip-${f.hours[0].time.toIso8601String()}')),
+      );
+      final next = tester.getRect(
+        find.byKey(ValueKey('hour-pip-${f.hours[1].time.toIso8601String()}')),
+      );
+      expect(next.left - first.right, closeTo(1, .01));
       final scrollable = find.descendant(
         of: find.byType(HourlyForecastStrip),
         matching: find.byType(Scrollable),
@@ -263,7 +244,7 @@ void main() {
         WeatherChartKind.temperature,
       );
       final range = tester.widget<WeatherChart>(charts()).range!;
-      expect(range.end.difference(range.start), const Duration(hours: 12));
+      expect(range.end.difference(range.start), const Duration(hours: 24));
       await tester.tap(charts());
       await tester.pumpAndSettle();
       expect(
@@ -282,79 +263,86 @@ void main() {
       c.dispose();
     },
   );
-  testWidgets('future cards pass the full day window to both chart faces', (
-    tester,
-  ) async {
-    final f = data();
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: DailyWeatherCard(
-            forecast: f,
-            day: f.days[1],
-            index: 1,
-            settings: const Settings(),
-            now: now,
-            height: 240,
-          ),
-        ),
-      ),
-    );
-    for (final kind in WeatherChartKind.values) {
-      final chart = tester.widget<WeatherChart>(find.byType(WeatherChart));
-      expect(chart.kind, kind);
-      expect(chart.range!.start.toUtc(), DateTime.utc(2026, 10, 19, 4));
-      expect(chart.range!.end.toUtc(), DateTime.utc(2026, 10, 20, 4));
-      await tester.tap(find.byKey(const ValueKey('flip-day-1')));
-      await tester.pumpAndSettle();
-    }
-    expect(tester.takeException(), isNull);
-  });
   testWidgets(
-    'daily graph sits between high and low, with precipitation on the back',
+    'daily forecast is a connected list of thin weather and high low rows',
     (tester) async {
       viewport(tester, const Size(390, 844));
-      final c = compactController();
-      await tester.pumpWidget(DaybreakApp(controller: c));
-      await tester.pumpAndSettle();
-      final card = find.byType(DailyWeatherCard).first;
-      await tester.ensureVisible(card);
-      await tester.pumpAndSettle();
-      final high = find.descendant(of: card, matching: find.text('High'));
-      final low = find.descendant(of: card, matching: find.text('Low'));
-      final chart = find.descendant(
-        of: card,
-        matching: find.byType(WeatherChart),
-      );
-      expect(
-        tester.getRect(chart).left,
-        greaterThan(tester.getRect(high).right),
-      );
-      expect(tester.getRect(chart).right, lessThan(tester.getRect(low).left));
-      final f = c.forecast!;
-      expect(
-        find.descendant(
-          of: card,
-          matching: find.text(
-            forecastDayHeading(f.days.first, f, c.settings.place).toUpperCase(),
+      final f = data();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Padding(
+              padding: const EdgeInsets.all(24),
+              child: DailyForecastList(forecast: f, settings: const Settings()),
+            ),
           ),
         ),
-        findsOneWidget,
       );
-      await tester.tap(chart);
-      await tester.pumpAndSettle();
+      expect(find.byType(WeatherChart), findsNothing);
+      expect(find.text('Sun'), findsOneWidget);
+      expect(find.text('Oct 18'), findsOneWidget);
+      expect(find.text('Cloudy'), findsOneWidget);
+      expect(find.text('4°'), findsOneWidget);
+      expect(find.text('-5°'), findsOneWidget);
+      final first = tester.getRect(
+        find.byKey(const ValueKey('forecast-day-0')),
+      );
+      final next = tester.getRect(find.byKey(const ValueKey('forecast-day-1')));
+      expect(first.height, lessThanOrEqualTo(44));
+      expect(next.top - first.bottom, closeTo(1, .01));
       expect(
-        tester
-            .widget<WeatherChart>(
-              find.descendant(of: card, matching: find.byType(WeatherChart)),
-            )
-            .kind,
-        WeatherChartKind.precipitation,
+        tester.getSize(find.byType(DailyForecastList)).height,
+        lessThan(90),
       );
-      expect(find.text('Peak wind'), findsOneWidget);
       expect(tester.takeException(), isNull);
-      await tester.pumpWidget(const SizedBox());
-      c.dispose();
+    },
+  );
+  testWidgets(
+    'thin daily rows fit narrow windows with large text and missing values',
+    (tester) async {
+      viewport(tester, const Size(320, 844));
+      final f = data(
+        days: const [
+          DayForecast(
+            label: 'Monday',
+            date: '2026-10-19',
+            summary: 'Rain showers changing to thunderstorms',
+            high: 110,
+            low: -40,
+          ),
+          DayForecast(
+            label: 'Later',
+            summary: 'Conditions not reported',
+            low: 0,
+          ),
+        ],
+      );
+      for (final compact in [false, true]) {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Padding(
+                padding: const EdgeInsets.all(24),
+                child: MediaQuery(
+                  data: const MediaQueryData(
+                    textScaler: TextScaler.linear(2.5),
+                  ),
+                  child: DailyForecastList(
+                    forecast: f,
+                    settings: const Settings(fahrenheit: true),
+                    compact: compact,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        expect(find.text('230°'), findsOneWidget);
+        expect(find.text('-40°'), findsOneWidget);
+        expect(find.text('—'), findsOneWidget);
+        expect(find.text('32°'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      }
     },
   );
   testWidgets(
@@ -451,12 +439,9 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('flip-current')));
     await tester.pumpAndSettle();
     await save('main-graphs-back');
-    await tester.ensureVisible(find.byType(DailyWeatherCard).first);
+    await tester.ensureVisible(find.byType(DailyForecastList));
     await tester.pumpAndSettle();
-    await save('main-days-graphs-front');
-    await tester.tap(find.byKey(const ValueKey('flip-day-0')));
-    await tester.pumpAndSettle();
-    await save('main-days-graphs-back');
+    await save('main-dense-forecast');
     await tester.pumpWidget(const SizedBox());
     c.dispose();
   });
