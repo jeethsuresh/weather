@@ -69,10 +69,10 @@ It analyzes, tests, builds and signs the APK on the local machine, pushes the `v
 
 For a new version, change `version` in `pubspec.yaml` (for example, `1.1.1+3`), increasing both the version name and build number, then commit and run the command. Do not reuse published version codes or modify published tags. Obtainium can later subscribe to the repository URL and use these same release assets.
 
-Pushes to `main` and pull requests run `.github/workflows/ci.yml` for analysis and tests. Publishing a release runs `.github/workflows/release.yml`, which verifies the downloaded APK’s checksum, permanent signing certificate, package ID and release version. GitHub does not receive the private signing key or its passwords.
+Pushes to `main` and pull requests run `.github/workflows/ci.yml` for analysis and tests. Publishing a release runs `.github/workflows/release.yml`, which verifies the downloaded APK’s checksum, permanent signing certificate, package ID and release version. The separate **Build signed store release** workflow can now sign in GitHub using the protected `android-release` environment; see [Private Store release workflow](PRIVATE_STORE.md).
 
 ### Signing configuration
 
 Local release builds read the untracked `android/key.properties` file; see `android/key.properties.example`. Release builds fail if signing is missing rather than using an unrelated development key. The dedicated keystore and local credentials are in the ignored `.signing/` directory on the original build machine. Back up that directory securely; do not commit it or add it to release assets. Debug builds do not require the release key.
 
-The public certificate fingerprint is committed as `android/release-certificate.sha256`, so GitHub can verify published APKs without receiving the signing key. No signing secrets are configured in GitHub.
+The public certificate fingerprint is committed as `android/release-certificate.sha256`, so every build can verify the permanent certificate. GitHub signing uses encrypted `android-release` environment secrets restricted to `main`; the original protected local key remains the backup.
