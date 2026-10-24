@@ -16,7 +16,6 @@
     "build",
     "apk",
     "--release",
-    "--no-pub",
     "--target-platform",
     "android-arm64"
   ]
