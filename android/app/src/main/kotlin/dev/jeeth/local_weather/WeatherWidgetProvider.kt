@@ -63,9 +63,10 @@ abstract class CachedWeatherWidget(
         val days = data.optJSONArray("days")
         val day = (0 until (days?.length() ?: 0)).mapNotNull { days?.optJSONObject(it) }
             .firstOrNull { it.optString("date") == today }
-        val high = day?.optString("high", "—") ?: "—"
         val low = day?.optString("low", "—") ?: "—"
         val trend = if (details) TemperatureGraph.points(hours, now) else emptyList()
+        val high = TemperatureGraph.high(trend,
+            if (day?.isNull("high") == false) day.optString("high") else null)
         val graph = if (details) TemperatureGraph.draw(trend, stale, data.optString("unit") == "F") else null
         val graphTime = if (trend.size < 2) "No hourly data"
                         else "${trend.first().label}–${trend.last().label}"

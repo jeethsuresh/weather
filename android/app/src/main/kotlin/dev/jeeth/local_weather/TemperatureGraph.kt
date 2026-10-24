@@ -13,6 +13,11 @@ import kotlin.math.max
 internal data class TemperaturePoint(val time: Long, val value: Double, val label: String, val temperature: String)
 
 internal object TemperatureGraph {
+    fun high(points: List<TemperaturePoint>, reported: String?): String =
+        reported?.takeIf { it.isNotBlank() && it != "—" }
+            ?: points.maxByOrNull { it.value }?.temperature?.takeIf { it.isNotBlank() }
+            ?: "—"
+
     fun points(hours: JSONArray?, now: Long): List<TemperaturePoint> =
         (0 until (hours?.length() ?: 0)).mapNotNull { index ->
             val hour = hours?.optJSONObject(index) ?: return@mapNotNull null
