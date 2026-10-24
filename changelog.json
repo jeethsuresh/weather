@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "version": "1.4.3",
+  "versionCode": 8,
+  "changes": [
+    "When the reported high is missing, the main display, compact layout and home-screen widget use the highest available graph temperature.",
+    "Reported highs take precedence, and the fallback works in Celsius and Fahrenheit."
+  ]
+}
