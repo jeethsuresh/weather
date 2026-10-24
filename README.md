@@ -59,17 +59,9 @@ Only Android is configured in this project. No iOS widget or app target is inclu
 
 Repository: [jeethsuresh/weather](https://github.com/jeethsuresh/weather). Each release contains `daybreak-android-arm64.apk` and `SHA256SUMS`. Download the APK from the release assets on your phone. A GitHub login is required if the repository is private. The source stays on GitHub; the app still has no backend.
 
-Run the local release command after committing a version bump:
+Increase both the version name and build number in `pubspec.yaml`, then push or merge to `main`. GitHub's **Signed Android release** workflow automatically tests, signs with the permanent Daybreak key, verifies the APK and publishes the new version. The signing credentials are stored in the main-only `android-release` GitHub environment. Any machine with repository access can submit the version bump.
 
-```sh
-python3 scripts/release.py
-```
-
-It analyzes, tests, builds and signs the APK on the local machine, pushes the `v` tag, then uploads the APK and checksums to GitHub Releases. The signing key stays on this Mac. Install GitHub CLI and authenticate with `gh auth login` if no existing GitHub credential is available; this Mac also has a local CLI copy in ignored `.tools/gh`.
-
-For a new version, change `version` in `pubspec.yaml` (for example, `1.1.1+3`), increasing both the version name and build number, then commit and run the command. Do not reuse published version codes or modify published tags. Obtainium can later subscribe to the repository URL and use these same release assets.
-
-Pushes to `main` and pull requests run `.github/workflows/ci.yml` for analysis and tests. Publishing a release runs `.github/workflows/release.yml`, which verifies the downloaded APK’s checksum, permanent signing certificate, package ID and release version. The separate **Build signed store release** workflow can now sign in GitHub using the protected `android-release` environment; see [Private Store release workflow](PRIVATE_STORE.md).
+See [signed Android releases](ANDROID_RELEASES.md) for verification-only builds, secret maintenance and the release manifest. The protected original key remains the backup. Debug builds do not require it.
 
 ### Signing configuration
 

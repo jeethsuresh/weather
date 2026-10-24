@@ -1,0 +1,23 @@
+{
+  "name": "Daybreak",
+  "kind": "flutter",
+  "project_dir": ".",
+  "version_file": "pubspec.yaml",
+  "package": "dev.jeeth.local_weather",
+  "min_sdk": 24,
+  "key_alias": "daybreak",
+  "certificate_sha256": "18cb4dbf5d8b3ed41336acd2c1f6dc12bd7aba2d8f5a6dcaf9339e42b6af683a",
+  "apk": "build/app/outputs/flutter-apk/app-release.apk",
+  "asset": "daybreak-android-arm64.apk",
+  "properties_file": "android/key.properties",
+  "build": [
+    "flutter",
+    "--no-version-check",
+    "build",
+    "apk",
+    "--release",
+    "--no-pub",
+    "--target-platform",
+    "android-arm64"
+  ]
+}
