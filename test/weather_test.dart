@@ -40,6 +40,25 @@ void main() {
   );
 
   test(
+    'Canadian alerts retain the official colour and type for the widget',
+    () {
+      final j = fixture('canada');
+      j['properties']['warnings'] = [
+        {
+          'description': {'en': 'Wind warning'},
+          'type': {'en': 'warning'},
+          'alertColourLevel': {'en': 'orange'},
+          'expiryTime': {'en': '2026-10-18T22:00:00Z'},
+        },
+      ];
+      final alert = parseCanada(j, now).alerts.single;
+      expect(alert.type, 'warning');
+      expect(alert.colour, 'orange');
+      expect(WeatherAlert.fromJson(alert.toJson()).colour, 'orange');
+    },
+  );
+
+  test(
     'missing Canadian observation uses the matching hourly forecast, not an old observation timestamp',
     () {
       final j = fixture('canada');
@@ -126,6 +145,7 @@ void main() {
       );
       expect(f.alerts.length, 1);
       expect(f.alerts.first.title, 'Strong wind');
+      expect(f.alerts.first.type, 'Wind advisory');
       expect(f.days.first.low, isNotNull);
     },
   );

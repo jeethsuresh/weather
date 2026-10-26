@@ -61,6 +61,39 @@ Json widgetPayload(Settings settings, Forecast? forecast, DateTime now) {
             )
             .toList() ??
         [],
+    'alerts': [
+      for (final alert in forecast?.alerts ?? <WeatherAlert>[])
+        if (alert.expires == null || alert.expires!.isAfter(now))
+          widgetAdvisory(alert),
+    ],
     'kind': forecast == null ? 'unknown' : conditionKind(forecast.summary),
+  };
+}
+
+Json widgetAdvisory(WeatherAlert alert) {
+  final type = (alert.type.isEmpty ? alert.title : alert.type).toLowerCase();
+  final label =
+      type.contains('warning')
+          ? 'Warning'
+          : type.contains('watch')
+          ? 'Watch'
+          : type.contains('advisory')
+          ? 'Advisory'
+          : 'Alert';
+  final officialColour = alert.colour.trim().toLowerCase();
+  final colour =
+      const ['red', 'orange', 'yellow'].contains(officialColour)
+          ? officialColour
+          : switch (label) {
+            'Warning' => 'red',
+            'Watch' => 'orange',
+            'Advisory' => 'yellow',
+            _ => 'blue',
+          };
+  return {
+    'title': alert.title,
+    'label': label,
+    'colour': colour,
+    'expires': alert.expires?.millisecondsSinceEpoch,
   };
 }

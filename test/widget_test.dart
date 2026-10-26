@@ -192,6 +192,64 @@ void main() {
     },
   );
 
+  test(
+    'widget alerts preserve official colours and survive cache round trips',
+    () {
+      final alerts = [
+        WeatherAlert(
+          'Wind warning',
+          'Take care',
+          type: 'warning',
+          colour: 'yellow',
+          expires: now.add(const Duration(hours: 1)),
+        ),
+        WeatherAlert('Strong wind', 'Take care', type: 'Wind Advisory'),
+        WeatherAlert('Snow watch', 'Take care'),
+        WeatherAlert('Expired warning', 'Old', expires: now),
+      ];
+      final f = Forecast.fromJson(
+        forecast().toJson()
+          ..['alerts'] = alerts.map((alert) => alert.toJson()).toList(),
+      );
+      final data = widgetPayload(const Settings(), f, now);
+      expect((data['alerts'] as List).map((alert) => alert['colour']), [
+        'yellow',
+        'yellow',
+        'orange',
+      ]);
+      expect((data['alerts'] as List).map((alert) => alert['label']), [
+        'Warning',
+        'Advisory',
+        'Watch',
+      ]);
+      expect(
+        (data['alerts'] as List).first['expires'],
+        now.add(const Duration(hours: 1)).millisecondsSinceEpoch,
+      );
+      expect((data['alerts'] as List)[1]['title'], 'Strong wind');
+      expect(widgetPayload(const Settings(), null, now)['alerts'], isEmpty);
+      expect(
+        widgetPayload(const Settings(), forecast(), now)['alerts'],
+        isEmpty,
+      );
+    },
+  );
+
+  test('legacy alerts infer their type and unknown alerts remain visible', () {
+    for (final (title, label, colour) in [
+      ('Snow warning', 'Warning', 'red'),
+      ('Thunderstorm watch', 'Watch', 'orange'),
+      ('Wind advisory', 'Advisory', 'yellow'),
+      ('Special weather statement', 'Alert', 'blue'),
+    ]) {
+      final old = WeatherAlert.fromJson({'title': title, 'detail': 'Details'});
+      final alert = widgetAdvisory(old);
+      expect(alert['label'], label);
+      expect(alert['colour'], colour);
+      expect(alert['expires'], isNull);
+    }
+  });
+
   final calls = <MethodCall>[];
   const channel = MethodChannel('home_widget');
   setUp(() {

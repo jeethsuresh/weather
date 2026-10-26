@@ -56,6 +56,7 @@ abstract class CachedWeatherWidget(
         val high = TemperatureGraph.high(trend)
         val low = TemperatureGraph.low(trend)
         val graph = if (details) TemperatureGraph.draw(trend, stale, data.optString("unit") == "F") else null
+        val advisory = WidgetAdvisories.badge(data.optJSONArray("alerts"), now)
         val graphTime = if (trend.size < 2) "No hourly data"
                         else "${trend.first().label}–${trend.last().label}"
         for (id in ids) {
@@ -72,6 +73,7 @@ abstract class CachedWeatherWidget(
                 views.setImageViewBitmap(R.id.temperature_graph, graph)
                 views.setTextViewText(R.id.graph_time, graphTime)
                 views.setTextViewText(R.id.place, data.optString("place", "Daybreak"))
+                WidgetAdvisories.render(views, advisory)
                 views.setTextViewText(R.id.wind, data.optString("wind", "—"))
                 views.setTextViewText(R.id.precipitation, rain)
                 views.setTextViewText(R.id.precipitation_label, rainLabel)
@@ -82,6 +84,7 @@ abstract class CachedWeatherWidget(
                 append("${data.optString("place", "Daybreak")}, ${temperature.removeSuffix("°")} degrees ${data.optString("unit")}, $summary. ")
                 if (details) {
                     append("Next 12 hours: high $high, low $low. ")
+                    if (advisory != null) append("${advisory.description}. ")
                     if (trend.size >= 2) append("Hourly temperature trend: ${trend.first().temperature} at ${trend.first().label} to ${trend.last().temperature} at ${trend.last().label}. ")
                 }
                 if (details) append("Wind ${data.optString("wind", "not reported")}. $rainLabel, $rain chance. ")

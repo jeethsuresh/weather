@@ -4,6 +4,7 @@
   "versionCode": 9,
   "changes": [
     "High and low temperatures now always match the highest and lowest available points on the temperature graph.",
-    "The app uses its next 24 hours and the home-screen widget uses its next 12 hours, so their highs and lows can differ."
+    "The app uses its next 24 hours and the home-screen widget uses its next 12 hours, so their highs and lows can differ.",
+    "The 2\u00d72 widget shows active weather alerts in a colour-coded pill beside the location name."
   ]
 }
