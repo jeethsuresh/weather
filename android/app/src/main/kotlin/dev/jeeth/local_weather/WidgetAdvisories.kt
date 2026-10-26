@@ -30,7 +30,7 @@ internal object WidgetAdvisories {
             }
             .sortedByDescending { priority[it.optString("colour")] ?: 0 }
         val first = active.firstOrNull() ?: return null
-        val label = first.optString("label").takeIf { it in setOf("Warning", "Watch", "Advisory") } ?: "Alert"
+        val label = first.optString("title").replace(Regex("\\s+"), " ").trim()
         val colour = first.optString("colour").takeIf { it in priority } ?: "blue"
         return AdvisoryBadge(
             label + if (active.size > 1) " +${active.size - 1}" else "",
