@@ -1,18 +1,23 @@
 package dev.jeeth.local_weather
 
+import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Rect
 import android.view.View
+import android.view.ViewGroup
 import android.widget.RemoteViews
 import android.widget.TextView
+import org.json.JSONArray
+import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
@@ -40,9 +45,9 @@ class WidgetAdvisoryLayoutTest {
 
     private fun bounds(root: View, id: Int): Rect {
         val view = root.findViewById<View>(id)
-        val location = IntArray(2)
-        view.getLocationOnScreen(location)
-        return Rect(location[0], location[1], location[0] + view.width, location[1] + view.height)
+        return Rect(0, 0, view.width, view.height).also {
+            (root as ViewGroup).offsetDescendantRectToMyCoords(view, it)
+        }
     }
 
     @Test fun pillFitsBesideLongLocationsWithoutMovingTheRestOfTheLayout() {
@@ -63,6 +68,40 @@ class WidgetAdvisoryLayoutTest {
                 assertEquals("Other widget content must stay in place", bounds(empty, id), bounds(shown, id))
             }
         }
+    }
+
+    @Test fun providerRendersGraphExtremesAndActiveAlertsFromTheSavedSnapshot() {
+        val manager = AppWidgetManager.getInstance(context)
+        val shadow = shadowOf(manager)
+        val id = shadow.createWidget(WeatherWidgetProvider::class.java, R.layout.weather_widget)
+        val preferences = context.getSharedPreferences("widget-test", Context.MODE_PRIVATE)
+        val now = System.currentTimeMillis()
+        val alert = JSONObject().put("title", "Wind warning").put("label", "Warning")
+            .put("colour", "red").put("expires", now + 3600000)
+        val data = JSONObject().put("place", "Toronto").put("temperature", "16°")
+            .put("unit", "C").put("fetchedAt", now).put("observedAt", now)
+            .put("alerts", JSONArray().put(alert))
+            .put("days", JSONArray().put(JSONObject().put("high", "40°").put("low", "-40°")))
+            .put("hours", JSONArray().apply {
+                for ((offset, temperature) in listOf(1 to -5, 3 to -2, 13 to 40)) {
+                    put(JSONObject().put("timestamp", now + offset * 3600000L)
+                        .put("temperature", temperature).put("temperatureText", "$temperature°")
+                        .put("time", "hour $offset"))
+                }
+            })
+        fun update() {
+            preferences.edit().putString("weather", data.toString()).commit()
+            WeatherWidgetProvider().onUpdate(context, manager, intArrayOf(id), preferences)
+        }
+        update()
+        val view = shadow.getViewFor(id)
+        assertEquals("High -2°", view.findViewById<TextView>(R.id.daily_high).text.toString())
+        assertEquals("Low -5°", view.findViewById<TextView>(R.id.daily_low).text.toString())
+        assertEquals("Warning", view.findViewById<TextView>(R.id.advisory_pill).text.toString())
+        assertTrue(view.contentDescription.toString().contains("Wind warning"))
+        alert.put("expires", now - 1)
+        update()
+        assertEquals(View.GONE, shadow.getViewFor(id).findViewById<View>(R.id.advisory_pill).visibility)
     }
 
     @Test fun previewsAndReapplyClearAnExpiredPill() {

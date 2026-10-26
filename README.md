@@ -39,17 +39,19 @@ Three fixed-size native widgets are available: **1×1** (temperature and icon), 
 The tested toolchain is Flutter `3.32.0-0.2.pre` / Dart `3.8.0-278.1.beta`, JDK 17+, Android API 36, Android NDK `27.0.12077973`. Minimum Android version is 7.0 (API 24). Dependencies are locked in `pubspec.lock`; dynamic AndroidX dependencies from `home_widget` are pinned to stable compatible versions in `android/build.gradle.kts`.
 
 ```sh
-flutter --no-version-check pub get
+flutter --no-version-check pub get --enforce-lockfile
 flutter --no-version-check analyze
 flutter --no-version-check test --reporter expanded
 flutter --no-version-check test test/live_weather_test.dart --dart-define=LIVE_WEATHER=true --reporter expanded
 flutter --no-version-check run
+flutter --no-version-check build apk --debug --target-platform android-arm64
+(cd android && ./gradlew :app:testDebugUnitTest)
 flutter --no-version-check build apk --release --target-platform android-arm64
 ```
 
 `--no-version-check` avoids a hanging online SDK update check on this Mac. It does not disable dependency verification.
 
-Tests cover real provider fixtures, source routing and fallback, missing data, unit conversion, active/expired alerts, source-specific offline caching, manual refresh, corrupt-cache recovery, unit-change refresh races, DST, city search, and layouts at 320/390/480dp with larger text. Widget tests cover metric/imperial snapshots, missing versus zero readings, expired hours, clearing a location, publishing all three providers, and rejecting an old location/unit refresh. Additional tests cover compact square/short windows, simulated camera insets, independent flip state while scrolling, reduced motion, open/close resizing, keyboard-constrained city search, GPS permission denial, approximate fixes, stale-location rejection and picker dismissal during a pending fix. The optional live suite makes actual requests to all three weather services and geocoding. Test fixtures are public responses captured on October 18, 2026.
+Tests cover real provider fixtures, source routing and fallback, missing data, unit conversion, active/expired alerts, source-specific offline caching, manual refresh, corrupt-cache recovery, unit-change refresh races, DST, city search, and layouts at 320/390/480dp with larger text. Native widget tests cover graph extrema, alert priority and expiry, saved-snapshot updates, pill rendering and unchanged content positions at two widget widths. Widget tests cover metric/imperial snapshots, missing versus zero readings, expired hours, clearing a location, publishing all three providers, and rejecting an old location/unit refresh. Additional tests cover compact square/short windows, simulated camera insets, independent flip state while scrolling, reduced motion, open/close resizing, keyboard-constrained city search, GPS permission denial, approximate fixes, stale-location rejection and picker dismissal during a pending fix. The optional live suite makes actual requests to all three weather services and geocoding. Test fixtures are public responses captured on October 18, 2026.
 
 Source map: `lib/weather_api.dart` (requests/decoders), `lib/repository.dart` and `lib/storage.dart` (local persistence), `lib/background.dart` (periodic work/widget publishing), `lib/controller.dart` (foreground state), `lib/location.dart` (foreground position and permission flow), `lib/ui/weather_screen.dart` (full forecast and sheets), `lib/ui/compact_weather.dart` (cover-screen cards), and `android/app/src/main/kotlin/dev/jeeth/local_weather/WeatherWidgetProvider.kt` (widget).
 
