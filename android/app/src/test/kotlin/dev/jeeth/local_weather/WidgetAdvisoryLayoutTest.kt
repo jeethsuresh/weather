@@ -105,7 +105,7 @@ class WidgetAdvisoryLayoutTest {
     }
 
     @Test fun previewsAndReapplyClearAnExpiredPill() {
-        val directory = File("../build/previews").apply { mkdirs() }
+        val directory = File("../../build/previews").apply { mkdirs() }
         for ((colour, label) in listOf("red" to "Warning", "orange" to "Watch",
             "yellow" to "Advisory", "blue" to "Alert")) {
             val view = widget(240, AdvisoryBadge(label, colour, "Wind $label"))
