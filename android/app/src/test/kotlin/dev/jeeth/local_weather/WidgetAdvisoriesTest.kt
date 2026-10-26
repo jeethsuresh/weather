@@ -25,7 +25,7 @@ class WidgetAdvisoriesTest {
             .put(alert("Advisory", "yellow"))
             .put(alert("Watch", "orange"))
             .put(alert("Warning", "red")), now)!!
-        assertEquals("Warning +2", badge.label)
+        assertEquals("Wind Warning +2", badge.label)
         assertEquals("red", badge.colour)
         assertEquals("Weather alerts: Wind Warning; Wind Watch; Wind Advisory", badge.description)
     }
@@ -34,14 +34,14 @@ class WidgetAdvisoriesTest {
         val alerts = JSONArray().put(alert("Warning", "yellow", now + 1))
             .put(alert("Advisory", "orange", null))
         assertEquals("orange", WidgetAdvisories.badge(alerts, now)!!.colour)
-        assertEquals("Advisory +1", WidgetAdvisories.badge(alerts, now)!!.label)
-        assertEquals("Advisory", WidgetAdvisories.badge(alerts, now + 1)!!.label)
+        assertEquals("Wind Advisory +1", WidgetAdvisories.badge(alerts, now)!!.label)
+        assertEquals("Wind Advisory", WidgetAdvisories.badge(alerts, now + 1)!!.label)
     }
 
     @Test fun malformedEntriesAreIgnoredAndUnknownCategoriesUseANeutralPill() {
         val alerts = JSONArray().put(12).put(JSONObject()).put(alert("Statement", "unknown", null))
         val badge = WidgetAdvisories.badge(alerts, now)!!
-        assertEquals("Alert", badge.label)
+        assertEquals("Wind Statement", badge.label)
         assertEquals("blue", badge.colour)
     }
 }

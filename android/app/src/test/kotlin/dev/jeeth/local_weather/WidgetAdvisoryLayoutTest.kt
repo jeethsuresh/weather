@@ -52,20 +52,22 @@ class WidgetAdvisoryLayoutTest {
 
     @Test fun pillFitsBesideLongLocationsWithoutMovingTheRestOfTheLayout() {
         for (width in listOf(180, 240)) {
-            val empty = widget(width, null)
-            val shown = widget(width, AdvisoryBadge("Warning +2", "red", "Wind warning"),
-                "A very long location name that must truncate")
-            assertEquals(View.GONE, empty.findViewById<View>(R.id.advisory_pill).visibility)
-            val pill = shown.findViewById<TextView>(R.id.advisory_pill)
-            assertEquals(View.VISIBLE, pill.visibility)
-            assertEquals("Warning +2", pill.text.toString())
-            assertEquals("Wind warning", pill.contentDescription)
-            assertTrue(bounds(shown, R.id.place).right < bounds(shown, R.id.advisory_pill).left)
-            assertTrue(bounds(shown, R.id.advisory_pill).right <= width - shown.paddingRight)
-            for (id in listOf(R.id.temperature, R.id.daily_high, R.id.daily_low,
-                R.id.weather_icon, R.id.temperature_graph, R.id.condition, R.id.wind,
-                R.id.precipitation, R.id.updated)) {
-                assertEquals("Other widget content must stay in place", bounds(empty, id), bounds(shown, id))
+            for (title in listOf("Wind warning +2", "Severe thunderstorm warning +2")) {
+                val empty = widget(width, null)
+                val shown = widget(width, AdvisoryBadge(title, "red", "Wind warning"),
+                    "A very long location name that must truncate")
+                assertEquals(View.GONE, empty.findViewById<View>(R.id.advisory_pill).visibility)
+                val pill = shown.findViewById<TextView>(R.id.advisory_pill)
+                assertEquals(View.VISIBLE, pill.visibility)
+                assertEquals(title, pill.text.toString())
+                assertEquals("Wind warning", pill.contentDescription)
+                assertTrue(bounds(shown, R.id.place).right < bounds(shown, R.id.advisory_pill).left)
+                assertTrue(bounds(shown, R.id.advisory_pill).right <= width - shown.paddingRight)
+                for (id in listOf(R.id.temperature, R.id.daily_high, R.id.daily_low,
+                    R.id.weather_icon, R.id.temperature_graph, R.id.condition, R.id.wind,
+                    R.id.precipitation, R.id.updated)) {
+                    assertEquals("Other widget content must stay in place", bounds(empty, id), bounds(shown, id))
+                }
             }
         }
     }
@@ -97,7 +99,7 @@ class WidgetAdvisoryLayoutTest {
         val view = shadow.getViewFor(id)
         assertEquals("High -2°", view.findViewById<TextView>(R.id.daily_high).text.toString())
         assertEquals("Low -5°", view.findViewById<TextView>(R.id.daily_low).text.toString())
-        assertEquals("Warning", view.findViewById<TextView>(R.id.advisory_pill).text.toString())
+        assertEquals("Wind warning", view.findViewById<TextView>(R.id.advisory_pill).text.toString())
         assertTrue(view.contentDescription.toString().contains("Wind warning"))
         alert.put("expires", now - 1)
         update()
@@ -106,9 +108,9 @@ class WidgetAdvisoryLayoutTest {
 
     @Test fun previewsAndReapplyClearAnExpiredPill() {
         val directory = File("../../build/previews").apply { mkdirs() }
-        for ((colour, label) in listOf("red" to "Warning", "orange" to "Watch",
-            "yellow" to "Advisory", "blue" to "Alert")) {
-            val view = widget(240, AdvisoryBadge(label, colour, "Wind $label"))
+        for ((colour, label) in listOf("red" to "Wind warning", "orange" to "Wind watch",
+            "yellow" to "Heat advisory", "blue" to "Special weather statement")) {
+            val view = widget(240, AdvisoryBadge(label, colour, label))
             val bitmap = Bitmap.createBitmap(480, 480, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(bitmap).apply { scale(2f, 2f) }
             view.draw(canvas)
