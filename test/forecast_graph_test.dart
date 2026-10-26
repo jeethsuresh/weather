@@ -384,95 +384,121 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
-  testWidgets(
-    'missing high uses the current card graph in both layouts and units',
-    (tester) async {
-      final f = data(
-        days: const [DayForecast(label: 'Tonight', summary: 'Snow', low: -8)],
-        hours: [
-          for (final (offset, temperature) in [
-            (-1, 20.0),
-            (1, -5.0),
-            (3, -2.0),
-            (6, double.nan),
-            (25, 30.0),
-          ])
-            HourForecast(
-              time: now.add(Duration(hours: offset)),
-              temperature: temperature,
-              summary: 'Snow',
-            ),
-        ],
-      );
-      for (final compact in [false, true]) {
-        for (final fahrenheit in [false, true]) {
-          await tester.pumpWidget(
-            MaterialApp(
-              home: Scaffold(
-                body: CurrentWeatherCard(
-                  forecast: f,
-                  settings: Settings(fahrenheit: fahrenheit),
-                  now: now,
-                  height: compact ? 200 : 300,
-                  compact: compact,
-                ),
-              ),
-            ),
-          );
-          expect(
-            find.descendant(
-              of: find.byType(TemperatureRangeChart),
-              matching: find.text(fahrenheit ? '28°' : '-2°'),
-            ),
-            findsOneWidget,
-          );
-          final chart = tester.widget<WeatherChart>(find.byType(WeatherChart));
-          expect(chart.high, -2);
-          expect(chart.low, -8);
-          expect(tester.takeException(), isNull);
-        }
-      }
-    },
-  );
-
-  testWidgets('reported and missing highs handle zero and absent graph data', (
+  testWidgets('current card ignores daily extremes in both layouts and units', (
     tester,
   ) async {
-    for (final (reported, temperatures, expected) in [
-      (0.0, [-5.0, 2.0], 0.0),
-      (null, [-5.0, 0.0], 0.0),
-      (null, <double>[], null),
-      (null, [double.nan, double.infinity], null),
-    ]) {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Center(
-            child: SizedBox(
-              width: 300,
-              height: 80,
-              child: TemperatureRangeChart(
-                hours: [
-                  for (var i = 0; i < temperatures.length; i++)
-                    HourForecast(
-                      time: now.add(Duration(hours: i)),
-                      temperature: temperatures[i],
-                      summary: 'Cloudy',
-                    ),
-                ],
-                settings: const Settings(),
-                high: reported,
-                low: -8,
+    final f = data(
+      days: const [
+        DayForecast(label: 'Today', summary: 'Snow', high: 40, low: -40),
+      ],
+      hours: [
+        for (final (offset, temperature) in [
+          (-1, 20.0),
+          (1, -5.0),
+          (3, -2.0),
+          (6, double.nan),
+          (13, 4.0),
+          (25, 30.0),
+        ])
+          HourForecast(
+            time: now.add(Duration(hours: offset)),
+            temperature: temperature,
+            summary: 'Snow',
+          ),
+      ],
+    );
+    for (final compact in [false, true]) {
+      for (final fahrenheit in [false, true]) {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: CurrentWeatherCard(
+                forecast: f,
+                settings: Settings(fahrenheit: fahrenheit),
+                now: now,
+                height: compact ? 200 : 300,
+                compact: compact,
               ),
             ),
           ),
-        ),
-      );
-      expect(find.text(const Settings().temperature(expected)), findsOneWidget);
-      expect(
-        tester.widget<WeatherChart>(find.byType(WeatherChart)).high,
-        expected,
-      );
-      expect(tester.takeException(), isNull);
+        );
+        expect(
+          find.descendant(
+            of: find.byType(TemperatureRangeChart),
+            matching: find.text(fahrenheit ? '39°' : '4°'),
+          ),
+          findsOneWidget,
+        );
+        final chart = tester.widget<WeatherChart>(find.byType(WeatherChart));
+        expect(chart.high, 4);
+        expect(chart.low, -5);
+        expect(
+          find.descendant(
+            of: find.byType(TemperatureRangeChart),
+            matching: find.text(fahrenheit ? '23°' : '-5°'),
+          ),
+          findsOneWidget,
+        );
+        expect(tester.takeException(), isNull);
+      }
+    }
+  });
+
+  testWidgets('graph extremes handle zero, flat, sparse and absent data', (
+    tester,
+  ) async {
+    for (final (temperatures, high, low) in [
+      ([-5.0, 2.0], 2.0, -5.0),
+      ([-5.0, 0.0], 0.0, -5.0),
+      ([0.0, 0.0], 0.0, 0.0),
+      ([3.0], 3.0, 3.0),
+      (<double>[], null, null),
+      ([double.nan, double.infinity], null, null),
+    ]) {
+      for (final fahrenheit in [false, true]) {
+        final settings = Settings(fahrenheit: fahrenheit);
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Center(
+              child: SizedBox(
+                width: 300,
+                height: 80,
+                child: TemperatureRangeChart(
+                  hours: [
+                    for (var i = 0; i < temperatures.length; i++)
+                      HourForecast(
+                        time: now.add(Duration(hours: i)),
+                        temperature: temperatures[i],
+                        summary: 'Cloudy',
+                      ),
+                  ],
+                  settings: settings,
+                ),
+              ),
+            ),
+          ),
+        );
+        final chart = tester.widget<WeatherChart>(find.byType(WeatherChart));
+        expect(chart.high, high);
+        expect(chart.low, low);
+        final labels = find
+            .descendant(
+              of: find.byType(TemperatureRangeChart),
+              matching: find.byType(Text),
+            )
+            .evaluate()
+            .map((element) => (element.widget as Text).data);
+        expect(
+          labels,
+          containsAll([
+            'High',
+            settings.temperature(high),
+            'Low',
+            settings.temperature(low),
+          ]),
+        );
+        expect(tester.takeException(), isNull);
+      }
     }
   });
 
@@ -499,8 +525,6 @@ void main() {
               child: TemperatureRangeChart(
                 hours: f.hours,
                 settings: Settings(fahrenheit: fahrenheit),
-                high: 0,
-                low: 0,
               ),
             ),
           ),

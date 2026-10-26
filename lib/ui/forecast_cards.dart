@@ -26,7 +26,6 @@ class CurrentWeatherCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final range = upcomingChartRange(now);
     final hours = range.hoursFrom(forecast);
-    final today = todayForecast(forecast, settings.place, now);
     return FlipWeatherCard(
       id: 'current',
       storageId: '${settings.place.id}-${forecast.source.name}-current',
@@ -39,7 +38,6 @@ class CurrentWeatherCard extends StatelessWidget {
         settings: settings,
         hours: hours,
         range: range,
-        today: today,
         compact: compact,
       ),
       back: _PrecipitationBack(
@@ -247,14 +245,12 @@ class _CurrentFront extends StatelessWidget {
     required this.settings,
     required this.hours,
     required this.range,
-    required this.today,
     required this.compact,
   });
   final Forecast forecast;
   final Settings settings;
   final List<HourForecast> hours;
   final ForecastChartRange range;
-  final DayForecast? today;
   final bool compact;
   @override
   Widget build(BuildContext context) {
@@ -317,8 +313,6 @@ class _CurrentFront extends StatelessWidget {
             hours: hours,
             range: range,
             settings: settings,
-            high: today?.high,
-            low: today?.low,
           ),
         ),
       ],
