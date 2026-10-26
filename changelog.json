@@ -1,9 +1,10 @@
 {
   "schemaVersion": 1,
-  "version": "1.4.3",
-  "versionCode": 8,
+  "version": "1.4.4",
+  "versionCode": 9,
   "changes": [
-    "When the reported high is missing, the main display, compact layout and home-screen widget use the highest available graph temperature.",
-    "Reported highs take precedence, and the fallback works in Celsius and Fahrenheit."
+    "High and low temperatures now always match the highest and lowest available points on the temperature graph.",
+    "The app uses its next 24 hours and the home-screen widget uses its next 12 hours, so their highs and lows can differ.",
+    "The 2\u00d72 widget shows active weather alerts in a colour-coded pill beside the location name."
   ]
 }

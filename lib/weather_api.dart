@@ -421,6 +421,8 @@ Forecast parseCanada(
           title,
           _text(w['text'], _text(w['url'])),
           expires: expires,
+          type: _text(w['type']),
+          colour: _text(w['alertColourLevel']),
         ),
       );
     }
@@ -534,6 +536,7 @@ Forecast parseNws(
         a['headline'] ?? a['event'] ?? 'Weather alert',
         [a['description'], a['instruction']].whereType<String>().join('\n\n'),
         expires: expires,
+        type: a['event'] ?? '',
       ),
     );
   }

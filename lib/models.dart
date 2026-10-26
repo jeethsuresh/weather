@@ -187,18 +187,28 @@ class DayForecast {
 }
 
 class WeatherAlert {
-  const WeatherAlert(this.title, this.detail, {this.expires});
-  final String title, detail;
+  const WeatherAlert(
+    this.title,
+    this.detail, {
+    this.expires,
+    this.type = '',
+    this.colour = '',
+  });
+  final String title, detail, type, colour;
   final DateTime? expires;
   Json toJson() => {
     'title': title,
     'detail': detail,
     'expires': expires?.toIso8601String(),
+    'type': type,
+    'colour': colour,
   };
   factory WeatherAlert.fromJson(Json j) => WeatherAlert(
     j['title'],
     j['detail'],
     expires: DateTime.tryParse(j['expires'] ?? ''),
+    type: j['type'] ?? '',
+    colour: j['colour'] ?? '',
   );
 }
 

@@ -10,10 +10,6 @@ import android.os.Bundle
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetProvider
 import org.json.JSONObject
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import java.util.TimeZone
 
 // Keep the original receiver name so installed widgets survive an app update.
 class WeatherWidgetProvider : CachedWeatherWidget(R.layout.weather_widget, true)
@@ -56,18 +52,11 @@ abstract class CachedWeatherWidget(
                    else nextHour.optString("rain", "—")
         val rainLabel = if (nextHour == null) "Precip · next hr"
                         else "Precip · ${nextHour.optString("time")}"
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply {
-            timeZone = TimeZone.getTimeZone(data.optString("timeZone", "UTC"))
-        }
-        val today = dateFormat.format(Date(now))
-        val days = data.optJSONArray("days")
-        val day = (0 until (days?.length() ?: 0)).mapNotNull { days?.optJSONObject(it) }
-            .firstOrNull { it.optString("date") == today }
-        val low = day?.optString("low", "—") ?: "—"
         val trend = if (details) TemperatureGraph.points(hours, now) else emptyList()
-        val high = TemperatureGraph.high(trend,
-            if (day?.isNull("high") == false) day.optString("high") else null)
+        val high = TemperatureGraph.high(trend)
+        val low = TemperatureGraph.low(trend)
         val graph = if (details) TemperatureGraph.draw(trend, stale, data.optString("unit") == "F") else null
+        val advisory = WidgetAdvisories.badge(data.optJSONArray("alerts"), now)
         val graphTime = if (trend.size < 2) "No hourly data"
                         else "${trend.first().label}–${trend.last().label}"
         for (id in ids) {
@@ -84,6 +73,7 @@ abstract class CachedWeatherWidget(
                 views.setImageViewBitmap(R.id.temperature_graph, graph)
                 views.setTextViewText(R.id.graph_time, graphTime)
                 views.setTextViewText(R.id.place, data.optString("place", "Daybreak"))
+                WidgetAdvisories.render(views, advisory)
                 views.setTextViewText(R.id.wind, data.optString("wind", "—"))
                 views.setTextViewText(R.id.precipitation, rain)
                 views.setTextViewText(R.id.precipitation_label, rainLabel)
@@ -93,7 +83,8 @@ abstract class CachedWeatherWidget(
             val description = buildString {
                 append("${data.optString("place", "Daybreak")}, ${temperature.removeSuffix("°")} degrees ${data.optString("unit")}, $summary. ")
                 if (details) {
-                    append("Today's high $high, low $low. ")
+                    append("Next 12 hours: high $high, low $low. ")
+                    if (advisory != null) append("${advisory.description}. ")
                     if (trend.size >= 2) append("Hourly temperature trend: ${trend.first().temperature} at ${trend.first().label} to ${trend.last().temperature} at ${trend.last().label}. ")
                 }
                 if (details) append("Wind ${data.optString("wind", "not reported")}. $rainLabel, $rain chance. ")

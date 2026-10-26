@@ -299,29 +299,27 @@ class TemperatureRangeChart extends StatelessWidget {
     super.key,
     required this.hours,
     required this.settings,
-    required this.high,
-    required this.low,
     this.dark = false,
     this.range,
   });
   final List<HourForecast> hours;
   final Settings settings;
-  final double? high, low;
   final bool dark;
   final ForecastChartRange? range;
   @override
   Widget build(BuildContext context) {
     final fg = dark ? const Color(0xffe7f0df) : ink;
-    final effectiveHigh =
-        high ??
-        hours
-            .map((hour) => hour.temperature)
-            .where((value) => value.isFinite)
-            .fold<double?>(
-              null,
-              (highest, value) =>
-                  highest == null ? value : math.max(highest, value),
-            );
+    final temperatures = hours
+        .map((hour) => hour.temperature)
+        .where((value) => value.isFinite);
+    final high = temperatures.fold<double?>(
+      null,
+      (highest, value) => highest == null ? value : math.max(highest, value),
+    );
+    final low = temperatures.fold<double?>(
+      null,
+      (lowest, value) => lowest == null ? value : math.min(lowest, value),
+    );
     Widget reading(String label, double? value) => SizedBox(
       width: 49,
       child: Column(
@@ -352,7 +350,7 @@ class TemperatureRangeChart extends StatelessWidget {
     );
     return Row(
       children: [
-        reading('High', effectiveHigh),
+        reading('High', high),
         const SizedBox(width: 5),
         Expanded(
           child: WeatherChart(
@@ -360,7 +358,7 @@ class TemperatureRangeChart extends StatelessWidget {
             settings: settings,
             kind: WeatherChartKind.temperature,
             dark: dark,
-            high: effectiveHigh,
+            high: high,
             low: low,
             range: range,
           ),

@@ -11,7 +11,7 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - name: Set up Flutter
@@ -24,3 +24,15 @@ jobs:
         run: flutter --no-version-check analyze
       - name: Test
         run: flutter --no-version-check test --reporter expanded
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-36 build-tools;35.0.0 ndk;27.0.12077973'
+      - name: Build Android widget and app
+        run: flutter --no-version-check build apk --debug --no-pub --target-platform android-arm64
+      - name: Test native widget graph
+        working-directory: android
+        run: ./gradlew :app:testDebugUnitTest
