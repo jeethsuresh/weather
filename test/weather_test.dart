@@ -5,6 +5,7 @@ import 'package:local_weather/controller.dart';
 import 'package:local_weather/models.dart';
 import 'package:local_weather/repository.dart';
 import 'package:local_weather/weather_api.dart';
+import 'package:local_weather/widget_data.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'support.dart';
 
@@ -59,6 +60,54 @@ void main() {
   );
 
   test(
+    'provider event metadata reaches the widget independently of headlines',
+    () {
+      final events = fixture('alert_events');
+      final canada = fixture('canada');
+      canada['properties']['warnings'] = [
+        for (final hazard in events['canadaHazards'])
+          {
+            'description': {'en': 'YELLOW ADVISORY - ${hazard.toUpperCase()}'},
+            'type': {'en': 'advisory'},
+            'alertColourLevel': {'en': 'yellow'},
+          },
+      ];
+      final canadianAlerts = parseCanada(canada, now).alerts;
+      expect(canadianAlerts.length, events['canadaHazards'].length);
+      expect(
+        widgetAdvisory(canadianAlerts[3])['title'],
+        'YELLOW ADVISORY - FROST',
+      );
+      expect(widgetAdvisory(canadianAlerts[3])['event'], 'advisory');
+      expect(widgetAdvisory(canadianAlerts[3])['colour'], 'yellow');
+      final nws = parseNws(
+        fixture('nws_hourly'),
+        fixture('nws_daily'),
+        {
+          'features': [
+            for (final entry in events['nws'])
+              {
+                'properties': {
+                  'status': 'Actual',
+                  'event': entry['event'],
+                  'headline':
+                      'Issued today for several counties until tomorrow',
+                },
+              },
+          ],
+        },
+        ny,
+        now,
+      );
+      expect(nws.alerts.length, events['nws'].length);
+      expect(
+        nws.alerts.map((alert) => widgetAdvisory(alert)['event']),
+        events['nws'].map((entry) => entry['event']),
+      );
+    },
+  );
+
+  test(
     'missing Canadian observation uses the matching hourly forecast, not an old observation timestamp',
     () {
       final j = fixture('canada');
@@ -93,6 +142,10 @@ void main() {
       final f = parseOpenMeteo(j, Place.toronto, now);
       expect(f.hours.length, 168);
       expect(f.days.length, 7);
+      expect(
+        f.alerts,
+        isEmpty,
+      ); // This provider does not expose official alerts.
       expect(f.hours.first.time.isUtc, isTrue);
       expect(f.days.first.label, 'Sunday');
       expect(Place.toronto.local(f.sunrise!).hour, inInclusiveRange(6, 8));

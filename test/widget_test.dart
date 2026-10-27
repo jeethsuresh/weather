@@ -217,10 +217,10 @@ void main() {
         'yellow',
         'orange',
       ]);
-      expect((data['alerts'] as List).map((alert) => alert['label']), [
-        'Warning',
-        'Advisory',
-        'Watch',
+      expect((data['alerts'] as List).map((alert) => alert['event']), [
+        'warning',
+        'Wind Advisory',
+        '',
       ]);
       expect(
         (data['alerts'] as List).first['expires'],
@@ -236,15 +236,15 @@ void main() {
   );
 
   test('legacy alerts infer their type and unknown alerts remain visible', () {
-    for (final (title, label, colour) in [
-      ('Snow warning', 'Warning', 'red'),
-      ('Thunderstorm watch', 'Watch', 'orange'),
-      ('Wind advisory', 'Advisory', 'yellow'),
-      ('Special weather statement', 'Alert', 'blue'),
+    for (final (title, colour) in [
+      ('Snow warning', 'red'),
+      ('Thunderstorm watch', 'orange'),
+      ('Wind advisory', 'yellow'),
+      ('Special weather statement', 'blue'),
     ]) {
       final old = WeatherAlert.fromJson({'title': title, 'detail': 'Details'});
       final alert = widgetAdvisory(old);
-      expect(alert['label'], label);
+      expect(alert['event'], '');
       expect(alert['colour'], colour);
       expect(alert['expires'], isNull);
     }
