@@ -73,7 +73,6 @@ abstract class CachedWeatherWidget(
                 views.setImageViewBitmap(R.id.temperature_graph, graph)
                 views.setTextViewText(R.id.graph_time, graphTime)
                 views.setTextViewText(R.id.place, data.optString("place", "Daybreak"))
-                WidgetAdvisories.render(views, advisory)
                 views.setTextViewText(R.id.wind, data.optString("wind", "—"))
                 views.setTextViewText(R.id.precipitation, rain)
                 views.setTextViewText(R.id.precipitation_label, rainLabel)
@@ -97,7 +96,10 @@ abstract class CachedWeatherWidget(
             val click = PendingIntent.getActivity(context, id, launch,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
             views.setOnClickPendingIntent(R.id.widget_root, click)
-            manager.updateAppWidget(id, views)
+            manager.updateAppWidget(id, if (details) WidgetAdvisories.render(
+                context, views, advisory, data.optString("place", "Daybreak"),
+                manager.getAppWidgetOptions(id),
+            ) else views)
         }
     }
 

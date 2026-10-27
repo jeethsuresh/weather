@@ -1,8 +1,10 @@
 {
   "schemaVersion": 1,
-  "version": "1.4.5",
-  "versionCode": 10,
+  "version": "1.4.6",
+  "versionCode": 11,
   "changes": [
-    "The widget alert pill now names the weather advisory, warning or watch instead of showing a generic category."
+    "Widget alerts name the actual hazard, such as Frost, Wind or Rainfall, using Environment Canada and NWS event information.",
+    "The widget keeps the location visible and reduces the alert to a coloured dot when the full location and hazard cannot fit together.",
+    "Open-Meteo forecasts do not include official weather alerts."
   ]
 }

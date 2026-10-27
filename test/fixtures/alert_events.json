@@ -1,0 +1,480 @@
+{
+  "nwsSource": "https://api.weather.gov/alerts/types",
+  "nws": [
+    {
+      "event": "911 Telephone Outage",
+      "hazard": "911 telephone outage"
+    },
+    {
+      "event": "Administrative Message",
+      "hazard": ""
+    },
+    {
+      "event": "Air Quality Alert",
+      "hazard": "Air quality"
+    },
+    {
+      "event": "Air Stagnation Advisory",
+      "hazard": "Air stagnation"
+    },
+    {
+      "event": "Ashfall Advisory",
+      "hazard": "Ashfall"
+    },
+    {
+      "event": "Ashfall Warning",
+      "hazard": "Ashfall"
+    },
+    {
+      "event": "Avalanche Advisory",
+      "hazard": "Avalanche"
+    },
+    {
+      "event": "Avalanche Warning",
+      "hazard": "Avalanche"
+    },
+    {
+      "event": "Avalanche Watch",
+      "hazard": "Avalanche"
+    },
+    {
+      "event": "Beach Hazards Statement",
+      "hazard": "Beach hazards"
+    },
+    {
+      "event": "Blizzard Warning",
+      "hazard": "Blizzard"
+    },
+    {
+      "event": "Blowing Dust Advisory",
+      "hazard": "Blowing dust"
+    },
+    {
+      "event": "Blowing Dust Warning",
+      "hazard": "Blowing dust"
+    },
+    {
+      "event": "Blue Alert",
+      "hazard": "Officer safety"
+    },
+    {
+      "event": "Brisk Wind Advisory",
+      "hazard": "Brisk wind"
+    },
+    {
+      "event": "Child Abduction Emergency",
+      "hazard": "Child abduction emergency"
+    },
+    {
+      "event": "Civil Danger Warning",
+      "hazard": "Civil danger"
+    },
+    {
+      "event": "Civil Emergency Message",
+      "hazard": "Civil emergency"
+    },
+    {
+      "event": "Coastal Flood Advisory",
+      "hazard": "Coastal flood"
+    },
+    {
+      "event": "Coastal Flood Statement",
+      "hazard": "Coastal flood"
+    },
+    {
+      "event": "Coastal Flood Warning",
+      "hazard": "Coastal flood"
+    },
+    {
+      "event": "Coastal Flood Watch",
+      "hazard": "Coastal flood"
+    },
+    {
+      "event": "Cold Weather Advisory",
+      "hazard": "Cold weather"
+    },
+    {
+      "event": "Dense Fog Advisory",
+      "hazard": "Dense fog"
+    },
+    {
+      "event": "Dense Smoke Advisory",
+      "hazard": "Dense smoke"
+    },
+    {
+      "event": "Dust Advisory",
+      "hazard": "Dust"
+    },
+    {
+      "event": "Dust Storm Warning",
+      "hazard": "Dust storm"
+    },
+    {
+      "event": "Earthquake Warning",
+      "hazard": "Earthquake"
+    },
+    {
+      "event": "Evacuation Immediate",
+      "hazard": "Evacuation immediate"
+    },
+    {
+      "event": "Extreme Heat Warning",
+      "hazard": "Extreme heat"
+    },
+    {
+      "event": "Extreme Heat Watch",
+      "hazard": "Extreme heat"
+    },
+    {
+      "event": "Extreme Cold Warning",
+      "hazard": "Extreme cold"
+    },
+    {
+      "event": "Extreme Cold Watch",
+      "hazard": "Extreme cold"
+    },
+    {
+      "event": "Extreme Fire Danger",
+      "hazard": "Extreme fire danger"
+    },
+    {
+      "event": "Extreme Wind Warning",
+      "hazard": "Extreme wind"
+    },
+    {
+      "event": "Fire Warning",
+      "hazard": "Fire"
+    },
+    {
+      "event": "Fire Weather Watch",
+      "hazard": "Fire weather"
+    },
+    {
+      "event": "Flash Flood Statement",
+      "hazard": "Flash flood"
+    },
+    {
+      "event": "Flash Flood Warning",
+      "hazard": "Flash flood"
+    },
+    {
+      "event": "Flash Flood Watch",
+      "hazard": "Flash flood"
+    },
+    {
+      "event": "Flood Advisory",
+      "hazard": "Flood"
+    },
+    {
+      "event": "Flood Statement",
+      "hazard": "Flood"
+    },
+    {
+      "event": "Flood Warning",
+      "hazard": "Flood"
+    },
+    {
+      "event": "Flood Watch",
+      "hazard": "Flood"
+    },
+    {
+      "event": "Freeze Warning",
+      "hazard": "Freeze"
+    },
+    {
+      "event": "Freeze Watch",
+      "hazard": "Freeze"
+    },
+    {
+      "event": "Freezing Fog Advisory",
+      "hazard": "Freezing fog"
+    },
+    {
+      "event": "Freezing Spray Advisory",
+      "hazard": "Freezing spray"
+    },
+    {
+      "event": "Frost Advisory",
+      "hazard": "Frost"
+    },
+    {
+      "event": "Gale Warning",
+      "hazard": "Gale"
+    },
+    {
+      "event": "Gale Watch",
+      "hazard": "Gale"
+    },
+    {
+      "event": "Hazardous Materials Warning",
+      "hazard": "Hazardous materials"
+    },
+    {
+      "event": "Hazardous Seas Warning",
+      "hazard": "Hazardous seas"
+    },
+    {
+      "event": "Hazardous Seas Watch",
+      "hazard": "Hazardous seas"
+    },
+    {
+      "event": "Hazardous Weather Outlook",
+      "hazard": ""
+    },
+    {
+      "event": "Heat Advisory",
+      "hazard": "Heat"
+    },
+    {
+      "event": "Heavy Freezing Spray Warning",
+      "hazard": "Heavy freezing spray"
+    },
+    {
+      "event": "Heavy Freezing Spray Watch",
+      "hazard": "Heavy freezing spray"
+    },
+    {
+      "event": "High Surf Advisory",
+      "hazard": "High surf"
+    },
+    {
+      "event": "High Surf Warning",
+      "hazard": "High surf"
+    },
+    {
+      "event": "High Wind Warning",
+      "hazard": "High wind"
+    },
+    {
+      "event": "High Wind Watch",
+      "hazard": "High wind"
+    },
+    {
+      "event": "Hurricane Force Wind Warning",
+      "hazard": "Hurricane force wind"
+    },
+    {
+      "event": "Hurricane Force Wind Watch",
+      "hazard": "Hurricane force wind"
+    },
+    {
+      "event": "Hurricane Warning",
+      "hazard": "Hurricane"
+    },
+    {
+      "event": "Hurricane Watch",
+      "hazard": "Hurricane"
+    },
+    {
+      "event": "Hydrologic Outlook",
+      "hazard": ""
+    },
+    {
+      "event": "Ice Storm Warning",
+      "hazard": "Ice storm"
+    },
+    {
+      "event": "Lake Effect Snow Warning",
+      "hazard": "Lake effect snow"
+    },
+    {
+      "event": "Lake Wind Advisory",
+      "hazard": "Lake wind"
+    },
+    {
+      "event": "Lakeshore Flood Advisory",
+      "hazard": "Lakeshore flood"
+    },
+    {
+      "event": "Lakeshore Flood Statement",
+      "hazard": "Lakeshore flood"
+    },
+    {
+      "event": "Lakeshore Flood Warning",
+      "hazard": "Lakeshore flood"
+    },
+    {
+      "event": "Lakeshore Flood Watch",
+      "hazard": "Lakeshore flood"
+    },
+    {
+      "event": "Law Enforcement Warning",
+      "hazard": "Law enforcement"
+    },
+    {
+      "event": "Local Area Emergency",
+      "hazard": "Local area emergency"
+    },
+    {
+      "event": "Low Water Advisory",
+      "hazard": "Low water"
+    },
+    {
+      "event": "Marine Weather Statement",
+      "hazard": ""
+    },
+    {
+      "event": "Nuclear Power Plant Warning",
+      "hazard": "Nuclear power plant"
+    },
+    {
+      "event": "Radiological Hazard Warning",
+      "hazard": "Radiological hazard"
+    },
+    {
+      "event": "Red Flag Warning",
+      "hazard": "Fire danger"
+    },
+    {
+      "event": "Rip Current Statement",
+      "hazard": "Rip current"
+    },
+    {
+      "event": "Severe Thunderstorm Warning",
+      "hazard": "Severe thunderstorm"
+    },
+    {
+      "event": "Severe Thunderstorm Watch",
+      "hazard": "Severe thunderstorm"
+    },
+    {
+      "event": "Severe Weather Statement",
+      "hazard": ""
+    },
+    {
+      "event": "Shelter In Place Warning",
+      "hazard": "Shelter in place"
+    },
+    {
+      "event": "Short Term Forecast",
+      "hazard": ""
+    },
+    {
+      "event": "Small Craft Advisory",
+      "hazard": "Small craft"
+    },
+    {
+      "event": "Snow Squall Warning",
+      "hazard": "Snow squall"
+    },
+    {
+      "event": "Special Marine Warning",
+      "hazard": ""
+    },
+    {
+      "event": "Special Weather Statement",
+      "hazard": ""
+    },
+    {
+      "event": "Storm Surge Warning",
+      "hazard": "Storm surge"
+    },
+    {
+      "event": "Storm Surge Watch",
+      "hazard": "Storm surge"
+    },
+    {
+      "event": "Storm Warning",
+      "hazard": "Storm"
+    },
+    {
+      "event": "Storm Watch",
+      "hazard": "Storm"
+    },
+    {
+      "event": "Test",
+      "hazard": ""
+    },
+    {
+      "event": "Tornado Warning",
+      "hazard": "Tornado"
+    },
+    {
+      "event": "Tornado Watch",
+      "hazard": "Tornado"
+    },
+    {
+      "event": "Tropical Cyclone Local Statement",
+      "hazard": "Tropical cyclone local"
+    },
+    {
+      "event": "Tropical Storm Warning",
+      "hazard": "Tropical storm"
+    },
+    {
+      "event": "Tropical Storm Watch",
+      "hazard": "Tropical storm"
+    },
+    {
+      "event": "Tsunami Advisory",
+      "hazard": "Tsunami"
+    },
+    {
+      "event": "Tsunami Warning",
+      "hazard": "Tsunami"
+    },
+    {
+      "event": "Tsunami Watch",
+      "hazard": "Tsunami"
+    },
+    {
+      "event": "Typhoon Warning",
+      "hazard": "Typhoon"
+    },
+    {
+      "event": "Typhoon Watch",
+      "hazard": "Typhoon"
+    },
+    {
+      "event": "Volcano Warning",
+      "hazard": "Volcano"
+    },
+    {
+      "event": "Wind Advisory",
+      "hazard": "Wind"
+    },
+    {
+      "event": "Winter Storm Warning",
+      "hazard": "Winter storm"
+    },
+    {
+      "event": "Winter Storm Watch",
+      "hazard": "Winter storm"
+    },
+    {
+      "event": "Winter Weather Advisory",
+      "hazard": "Winter weather"
+    }
+  ],
+  "canadaSource": "https://www.canada.ca/en/services/environment/weather/severeweather/weather-alerts/weather-impact-guides.html",
+  "canadaHazards": [
+    "Cold",
+    "Arctic outflow",
+    "Extreme cold",
+    "Frost",
+    "Heat",
+    "Hurricane",
+    "Tropical storm",
+    "Freezing rain",
+    "Freezing drizzle",
+    "Flash freeze",
+    "Rain",
+    "Rainfall",
+    "Snow",
+    "Snowfall",
+    "Snow squall",
+    "Severe thunderstorm",
+    "Tornado",
+    "Blizzard",
+    "Blowing snow",
+    "Blowing dust",
+    "Dust storm",
+    "Fog",
+    "Wind",
+    "Winter storm",
+    "Storm surge",
+    "Coastal flooding",
+    "Air quality",
+    "Weather"
+  ]
+}

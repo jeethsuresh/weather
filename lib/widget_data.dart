@@ -92,7 +92,9 @@ Json widgetAdvisory(WeatherAlert alert) {
           };
   return {
     'title': alert.title,
-    'label': label,
+    // NWS event is the hazard; its headline includes issue times and regions.
+    // ECCC type is only warning/watch/advisory, so native code uses description.
+    'event': alert.type,
     'colour': colour,
     'expires': alert.expires?.millisecondsSinceEpoch,
   };
