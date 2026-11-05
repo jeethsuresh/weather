@@ -11,6 +11,7 @@ import 'package:local_weather/repository.dart';
 import 'package:local_weather/weather_api.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'support.dart';
+import 'gravitas_navigation_test.dart' as navigation;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -81,6 +82,9 @@ void main() {
         expect(c.settings.fahrenheit, isTrue);
         await tester.tapAt(const Offset(12, 12));
         await tester.pumpAndSettle();
+        await navigation.forward(tester);
+        expect(find.text('Make it yours'), findsOneWidget);
+        await navigation.back(tester);
         await tester.tap(find.text('Toronto'));
         await tester.pumpAndSettle();
         expect(find.text('Find your sky'), findsOneWidget);

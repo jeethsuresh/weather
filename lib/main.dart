@@ -1,8 +1,13 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
+
+import 'gravitas_navigation.dart';
+
 import 'package:flutter/services.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:workmanager/workmanager.dart';
+
 import 'background.dart';
 import 'controller.dart';
 import 'repository.dart';
@@ -29,6 +34,7 @@ class DaybreakApp extends StatefulWidget {
 
 class _DaybreakAppState extends State<DaybreakApp> with WidgetsBindingObserver {
   late final WeatherController controller;
+  final history = GravitasNavigationObserver();
   Timer? timer;
   @override
   void initState() {
@@ -66,6 +72,8 @@ class _DaybreakAppState extends State<DaybreakApp> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) => MaterialApp(
     title: 'Daybreak',
+    navigatorObservers: [history],
+    builder: (_, child) => GravitasNavigation(observer: history, child: child!),
     debugShowCheckedModeBanner: false,
     theme: ThemeData(
       useMaterial3: true,

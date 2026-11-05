@@ -3,7 +3,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <application
+    <application android:enableOnBackInvokedCallback="true"
         android:label="Daybreak"
         android:name="${applicationName}"
         android:allowBackup="false"
