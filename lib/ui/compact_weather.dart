@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../controller.dart';
 import '../models.dart';
 import 'weather_style.dart';
+import 'sky_weather.dart';
 import 'forecast_cards.dart';
 export 'flip_weather_card.dart';
 
@@ -12,9 +13,8 @@ export 'flip_weather_card.dart';
 /// physical display pixels or a manufacturer/model check.
 bool useCompactWeatherLayout(Size window) => window.height <= 600;
 
-const _background = Color(0xff102923);
-const _paper = Color(0xffe7f0df);
-const _soft = Color(0xffb9cec1);
+const _paper = Color(0xffe8f2fc);
+const _soft = Color(0xffbbd4e9);
 
 class CompactWeatherView extends StatelessWidget {
   const CompactWeatherView({
@@ -35,11 +35,11 @@ class CompactWeatherView extends StatelessWidget {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light.copyWith(
         statusBarColor: Colors.transparent,
-        systemNavigationBarColor: _background,
+        systemNavigationBarColor: SkyPalette.at(s, f, now).deep,
         systemNavigationBarIconBrightness: Brightness.light,
       ),
       child: Scaffold(
-        backgroundColor: _background,
+        backgroundColor: SkyPalette.at(s, f, now).deep,
         // Honor all system-reported cutouts and navigation insets on either display.
         body: SafeArea(
           minimum: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
@@ -170,6 +170,12 @@ class CompactWeatherView extends StatelessWidget {
                               now: now,
                               compact: true,
                               height: currentHeight * scale,
+                            ),
+                            SkyDetails(
+                              settings: s,
+                              forecast: f,
+                              now: now,
+                              dark: true,
                             ),
                             if (hours.isNotEmpty) ...[
                               const Padding(

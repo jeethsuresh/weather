@@ -15,6 +15,10 @@ Json widgetPayload(Settings settings, Forecast? forecast, DateTime now) {
   return {
     'place': settings.place.name,
     'timeZone': settings.place.timezone,
+    'latitude': settings.place.latitude,
+    'longitude': settings.place.longitude,
+    'sunrise': forecast?.sunrise?.millisecondsSinceEpoch,
+    'sunset': forecast?.sunset?.millisecondsSinceEpoch,
     'unit': settings.fahrenheit ? 'F' : 'C',
     'temperature': settings.temperature(forecast?.temperature),
     'summary': forecast?.summary ?? 'Tap to set up',

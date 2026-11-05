@@ -34,7 +34,7 @@ class WeatherChart extends StatelessWidget {
             .whereType<double>()
             .where((v) => v.isFinite)
             .toList();
-    final fg = dark ? const Color(0xffbfd4c8) : muted;
+    final fg = dark ? const Color(0xffbfd6ea) : muted;
     if (values.isEmpty || (!precipitation && hours.length < 2)) {
       return Center(
         child: Text(
@@ -95,7 +95,7 @@ class _WeatherChartPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (size.width < 30 || size.height < 24 || hours.isEmpty) return;
     final precip = kind == WeatherChartKind.precipitation;
-    final fg = dark ? const Color(0xffbfd4c8) : muted;
+    final fg = dark ? const Color(0xffbfd6ea) : muted;
     final accent =
         precip
             ? (dark ? const Color(0xff9ed1e2) : const Color(0xff387d97))
@@ -308,7 +308,7 @@ class TemperatureRangeChart extends StatelessWidget {
   final ForecastChartRange? range;
   @override
   Widget build(BuildContext context) {
-    final fg = dark ? const Color(0xffe7f0df) : ink;
+    final fg = dark ? const Color(0xffe8f2fc) : ink;
     final temperatures = hours
         .map((hour) => hour.temperature)
         .where((value) => value.isFinite);

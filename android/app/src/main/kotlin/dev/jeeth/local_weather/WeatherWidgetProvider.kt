@@ -59,15 +59,22 @@ abstract class CachedWeatherWidget(
         val advisory = WidgetAdvisories.badge(data.optJSONArray("alerts"), now)
         val graphTime = if (trend.size < 2) "No hourly data"
                         else "${trend.first().label}–${trend.last().label}"
+        val sky = WidgetSky.background(data, now, layout == R.layout.weather_widget_summary)
+        val clearNight = WidgetSky.clearNight(data, now)
+        val moon = if (clearNight) WidgetSky.moon(now, data.optDouble("latitude", 0.0) < 0) else null
         for (id in ids) {
             val views = RemoteViews(context.packageName, layout)
+            views.setImageViewBitmap(R.id.sky_background, sky)
             views.setTextViewText(R.id.temperature, temperature)
             views.setTextColor(R.id.temperature, Color.parseColor(if (stale) "#FFD29C" else "#FFFFFF"))
             views.setImageViewResource(R.id.weather_icon, icon(data.optString("kind")))
+            if (moon != null) views.setImageViewBitmap(R.id.weather_icon, moon)
             if (layout != R.layout.weather_widget_temperature) {
                 views.setTextViewText(R.id.condition, summary)
             }
             if (details) {
+                views.setTextViewText(R.id.sky_details, WidgetSky.times(data, now))
+                views.setContentDescription(R.id.sky_details, WidgetSky.times(data, now).replace("↑", "Sunrise").replace("↓", "Sunset"))
                 views.setTextViewText(R.id.daily_high, "High $high")
                 views.setTextViewText(R.id.daily_low, "Low $low")
                 views.setImageViewBitmap(R.id.temperature_graph, graph)
@@ -77,13 +84,15 @@ abstract class CachedWeatherWidget(
                 views.setTextViewText(R.id.precipitation, rain)
                 views.setTextViewText(R.id.precipitation_label, rainLabel)
                 views.setTextViewText(R.id.updated, if (stale) "Saved · $age" else age)
-                views.setTextColor(R.id.updated, Color.parseColor(if (stale) "#FFD29C" else "#AAC5B9"))
+                views.setTextColor(R.id.updated, Color.parseColor(if (stale) "#FFD29C" else "#BCD4E9"))
             }
             val description = buildString {
                 append("${data.optString("place", "Daybreak")}, ${temperature.removeSuffix("°")} degrees ${data.optString("unit")}, $summary. ")
+                if (clearNight) append("${WidgetSky.phaseName(WidgetSky.phase(now))}, approximate moon phase. ")
+                append(WidgetSky.times(data, now).replace("↑", "Sunrise").replace("↓", "Sunset") + ". ")
+                if (advisory != null) append("${advisory.description}. ")
                 if (details) {
                     append("Next 12 hours: high $high, low $low. ")
-                    if (advisory != null) append("${advisory.description}. ")
                     if (trend.size >= 2) append("Hourly temperature trend: ${trend.first().temperature} at ${trend.first().label} to ${trend.last().temperature} at ${trend.last().label}. ")
                 }
                 if (details) append("Wind ${data.optString("wind", "not reported")}. $rainLabel, $rain chance. ")

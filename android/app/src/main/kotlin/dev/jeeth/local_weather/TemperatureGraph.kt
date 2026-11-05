@@ -48,7 +48,7 @@ internal object TemperatureGraph {
             ((point.time - points.first().time).toDouble() / timeSpan * (right - left)).toFloat()
         fun y(point: TemperaturePoint) =
             (top + (middle + span / 2 - point.value) / span * (bottom - top)).toFloat()
-        paint.color = Color.parseColor("#527369")
+        paint.color = Color.parseColor("#59788F")
         paint.strokeWidth = 1f
         canvas.drawLine(left, bottom, right, bottom, paint)
         val segments = mutableListOf<MutableList<TemperaturePoint>>()

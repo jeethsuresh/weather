@@ -8,13 +8,36 @@ import '../controller.dart';
 import '../models.dart';
 import '../location.dart';
 
+import '../sky.dart';
+import 'sky_weather.dart';
 import 'compact_weather.dart';
 import 'weather_style.dart';
 import 'forecast_cards.dart';
 
-class WeatherScreen extends StatelessWidget {
+class WeatherScreen extends StatefulWidget {
   const WeatherScreen({super.key, required this.controller});
   final WeatherController controller;
+
+  @override
+  State<WeatherScreen> createState() => _WeatherScreenState();
+}
+
+class _WeatherScreenState extends State<WeatherScreen> {
+  WeatherController get controller => widget.controller;
+  late final Timer skyTimer;
+  @override
+  void initState() {
+    super.initState();
+    skyTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    skyTimer.cancel();
+    super.dispose();
+  }
 
   void _places(BuildContext context) => showModalBottomSheet<void>(
     context: context,
@@ -42,285 +65,286 @@ class WeatherScreen extends StatelessWidget {
       final scale =
           MediaQuery.textScalerOf(context).scale(1).clamp(1, 2).toDouble();
       if (useCompactWeatherLayout(MediaQuery.sizeOf(context))) {
-        return CompactWeatherView(
-          controller: controller,
-          onPlaces: () => _places(context),
-          onSettings: () => _settings(context),
+        return WarningEdges(
+          hazards: warningEdges(f?.alerts ?? [], now),
+          child: CompactWeatherView(
+            controller: controller,
+            onPlaces: () => _places(context),
+            onSettings: () => _settings(context),
+          ),
         );
       }
-      return Scaffold(
-        body: SafeArea(
-          bottom: false,
-          child: RefreshIndicator(
-            onRefresh: () => controller.refresh(force: true),
-            color: ink,
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(24, 18, 16, 12),
-                  sliver: SliverToBoxAdapter(
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 28,
-                          height: 28,
-                          decoration: const BoxDecoration(
-                            color: ink,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.wb_sunny_outlined,
-                            color: Color(0xffffd8a5),
-                            size: 18,
-                          ),
-                        ),
-                        const SizedBox(width: 9),
-                        const Expanded(
-                          child: Text(
-                            'DAYBREAK',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 3,
+      return WarningEdges(
+        hazards: warningEdges(f?.alerts ?? [], now),
+        child: Scaffold(
+          backgroundColor: SkyPalette.at(s, f, now).background,
+          body: SafeArea(
+            bottom: false,
+            child: RefreshIndicator(
+              onRefresh: () => controller.refresh(force: true),
+              color: ink,
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(24, 18, 16, 12),
+                    sliver: SliverToBoxAdapter(
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 28,
+                            height: 28,
+                            decoration: const BoxDecoration(
+                              color: ink,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.wb_sunny_outlined,
+                              color: Color(0xffffd8a5),
+                              size: 18,
                             ),
                           ),
-                        ),
-                        if (controller.loading)
-                          const Padding(
-                            padding: EdgeInsets.all(14),
-                            child: SizedBox(
-                              width: 19,
-                              height: 19,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                          )
-                        else
-                          IconButton(
-                            tooltip: 'Refresh forecast',
-                            onPressed: () => controller.refresh(force: true),
-                            icon: const Icon(Icons.refresh, size: 22),
-                          ),
-                        IconButton(
-                          tooltip: 'Weather settings',
-                          onPressed: () => _settings(context),
-                          icon: const Icon(Icons.tune, size: 22),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  sliver: SliverToBoxAdapter(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        InkWell(
-                          borderRadius: BorderRadius.circular(14),
-                          onTap: () => _places(context),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.location_on_outlined,
-                                  size: 23,
-                                ),
-                                const SizedBox(width: 7),
-                                Flexible(
-                                  child: Text(
-                                    s.place.name,
-                                    style: const TextStyle(
-                                      fontSize: 29,
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: -.8,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                const Icon(Icons.expand_more, size: 23),
-                              ],
+                          const SizedBox(width: 9),
+                          const Expanded(
+                            child: Text(
+                              'DAYBREAK',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 3,
+                              ),
                             ),
                           ),
-                        ),
-                        Text(
-                          '${s.place.subtitle}  ·  ${DateFormat('EEE, MMM d').format(s.place.local(now))}',
-                          style: const TextStyle(color: muted, fontSize: 13),
-                        ),
-                        const SizedBox(height: 22),
-                        if (f == null)
-                          _EmptyForecast(
-                            controller: controller,
-                            onChoosePlace: () => _places(context),
-                          )
-                        else ...[
-                          CurrentWeatherCard(
-                            key: ValueKey('card-current-${s.place.id}'),
-                            forecast: f,
-                            settings: s,
-                            now: now,
-                            height: 280 * scale,
-                          ),
-                          const SizedBox(height: 12),
-                          if (controller.error != null || f.staleAt(now))
-                            _Notice(
-                              controller.error ??
-                                  'Saved forecast · updated ${age(f.fetchedAt, now)}. Pull down to refresh.',
-                              icon: Icons.cloud_off_outlined,
-                            ),
-                          if (f.notice != null)
-                            _Notice(f.notice!, icon: Icons.info_outline),
-                          if (controller.backgroundError != null)
-                            _Notice(
-                              controller.backgroundError!,
-                              icon: Icons.schedule,
-                            ),
-                          for (final alert in f.alerts.where(
-                            (a) => a.expires == null || a.expires!.isAfter(now),
-                          ))
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: _AlertCard(alert: alert),
-                            ),
-                          const SizedBox(height: 6),
-                          _SectionTitle(
-                            'The hours ahead',
-                            trailing: '${hours.length} HOURS',
-                          ),
-                          const SizedBox(height: 8),
-                          if (hours.isEmpty)
-                            const _Card(
-                              child: Padding(
-                                padding: EdgeInsets.all(22),
-                                child: Text(
-                                  'Your saved hourly forecast has ended. Refresh when you’re online.',
+                          if (controller.loading)
+                            const Padding(
+                              padding: EdgeInsets.all(14),
+                              child: SizedBox(
+                                width: 19,
+                                height: 19,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
                                 ),
                               ),
                             )
                           else
-                            HourlyForecastStrip(
-                              key: ValueKey('card-hours-${s.place.id}'),
-                              hours: hours,
-                              settings: s,
+                            IconButton(
+                              tooltip: 'Refresh forecast',
+                              onPressed: () => controller.refresh(force: true),
+                              icon: const Icon(Icons.refresh, size: 22),
                             ),
-                          const SizedBox(height: 16),
-                          const _SectionTitle(
-                            'A little further out',
-                            trailing: 'HIGH / LOW',
-                          ),
-                          const SizedBox(height: 8),
-                          if (f.days.isNotEmpty)
-                            DailyForecastList(
-                              key: ValueKey('forecast-days-${s.place.id}'),
-                              forecast: f,
-                              settings: s,
-                            ),
-                          const SizedBox(height: 16),
-                          const _SectionTitle('Outside, in detail'),
-                          const SizedBox(height: 14),
-                          LayoutBuilder(
-                            builder: (context, constraints) {
-                              final tiles = [
-                                _Metric(
-                                  icon: Icons.thermostat_outlined,
-                                  label: 'FEELS LIKE',
-                                  value: s.temperature(f.feelsLike),
-                                  detail:
-                                      f.feelsLike == null
-                                          ? 'Not reported by source'
-                                          : 'Apparent temperature',
-                                ),
-                                _Metric(
-                                  icon: Icons.air,
-                                  label: 'WIND',
-                                  value: s.wind(f.wind),
-                                  detail: 'Near the surface',
-                                ),
-                                _Metric(
-                                  icon: Icons.water_drop_outlined,
-                                  label: 'HUMIDITY',
-                                  value:
-                                      f.humidity == null
-                                          ? '—'
-                                          : '${f.humidity!.round()}%',
-                                  detail: 'Relative humidity',
-                                ),
-                                _Metric(
-                                  icon: Icons.wb_twilight,
-                                  label:
-                                      f.sunset == null
-                                          ? 'PRECIPITATION'
-                                          : 'SUNSET',
-                                  value:
-                                      f.sunset == null
-                                          ? (hours.firstOrNull?.rain == null
-                                              ? '—'
-                                              : '${hours.first.rain!.round()}%')
-                                          : DateFormat(
-                                            'h:mm a',
-                                          ).format(s.place.local(f.sunset!)),
-                                  detail:
-                                      f.sunset == null
-                                          ? 'Chance in the next hour'
-                                          : 'Local time in ${s.place.name}',
-                                ),
-                              ];
-                              return Wrap(
-                                spacing: 12,
-                                runSpacing: 12,
-                                children:
-                                    tiles
-                                        .map(
-                                          (t) => SizedBox(
-                                            width:
-                                                (constraints.maxWidth - 12) / 2,
-                                            child: t,
-                                          ),
-                                        )
-                                        .toList(),
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 24),
-                          _SourceCard(
-                            forecast: f,
-                            settings: s,
-                            onTap: () => _settings(context),
+                          IconButton(
+                            tooltip: 'Weather settings',
+                            onPressed: () => _settings(context),
+                            icon: const Icon(Icons.tune, size: 22),
                           ),
                         ],
-                        const SizedBox(height: 24),
-                        Center(
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.phonelink_lock_outlined,
-                                size: 14,
-                                color: muted,
-                              ),
-                              const SizedBox(width: 7),
-                              Flexible(
-                                child: Text(
-                                  s.hourly
-                                      ? 'Stored on your phone · hourly checks'
-                                      : 'Stored on your phone · manual updates',
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    color: muted,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 36),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    sliver: SliverToBoxAdapter(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          InkWell(
+                            borderRadius: BorderRadius.circular(14),
+                            onTap: () => _places(context),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.location_on_outlined,
+                                    size: 23,
+                                  ),
+                                  const SizedBox(width: 7),
+                                  Flexible(
+                                    child: Text(
+                                      s.place.name,
+                                      style: const TextStyle(
+                                        fontSize: 29,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: -.8,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Icon(Icons.expand_more, size: 23),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Text(
+                            '${s.place.subtitle}  ·  ${DateFormat('EEE, MMM d').format(s.place.local(now))}',
+                            style: const TextStyle(color: muted, fontSize: 13),
+                          ),
+                          const SizedBox(height: 22),
+                          if (f == null)
+                            _EmptyForecast(
+                              controller: controller,
+                              onChoosePlace: () => _places(context),
+                            )
+                          else ...[
+                            CurrentWeatherCard(
+                              key: ValueKey('card-current-${s.place.id}'),
+                              forecast: f,
+                              settings: s,
+                              now: now,
+                              height: 280 * scale,
+                            ),
+                            SkyDetails(settings: s, forecast: f, now: now),
+                            if (controller.error != null || f.staleAt(now))
+                              _Notice(
+                                controller.error ??
+                                    'Saved forecast · updated ${age(f.fetchedAt, now)}. Pull down to refresh.',
+                                icon: Icons.cloud_off_outlined,
+                              ),
+                            if (f.notice != null)
+                              _Notice(f.notice!, icon: Icons.info_outline),
+                            if (controller.backgroundError != null)
+                              _Notice(
+                                controller.backgroundError!,
+                                icon: Icons.schedule,
+                              ),
+                            for (final alert in f.alerts.where(
+                              (a) =>
+                                  a.expires == null || a.expires!.isAfter(now),
+                            ))
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: _AlertCard(alert: alert),
+                              ),
+                            const SizedBox(height: 6),
+                            _SectionTitle(
+                              'The hours ahead',
+                              trailing: '${hours.length} HOURS',
+                            ),
+                            const SizedBox(height: 8),
+                            if (hours.isEmpty)
+                              const _Card(
+                                child: Padding(
+                                  padding: EdgeInsets.all(22),
+                                  child: Text(
+                                    'Your saved hourly forecast has ended. Refresh when you’re online.',
+                                  ),
+                                ),
+                              )
+                            else
+                              HourlyForecastStrip(
+                                key: ValueKey('card-hours-${s.place.id}'),
+                                hours: hours,
+                                settings: s,
+                              ),
+                            const SizedBox(height: 16),
+                            const _SectionTitle(
+                              'A little further out',
+                              trailing: 'HIGH / LOW',
+                            ),
+                            const SizedBox(height: 8),
+                            if (f.days.isNotEmpty)
+                              DailyForecastList(
+                                key: ValueKey('forecast-days-${s.place.id}'),
+                                forecast: f,
+                                settings: s,
+                              ),
+                            const SizedBox(height: 16),
+                            const _SectionTitle('Outside, in detail'),
+                            const SizedBox(height: 14),
+                            LayoutBuilder(
+                              builder: (context, constraints) {
+                                final tiles = [
+                                  _Metric(
+                                    icon: Icons.thermostat_outlined,
+                                    label: 'FEELS LIKE',
+                                    value: s.temperature(f.feelsLike),
+                                    detail:
+                                        f.feelsLike == null
+                                            ? 'Not reported by source'
+                                            : 'Apparent temperature',
+                                  ),
+                                  _Metric(
+                                    icon: Icons.air,
+                                    label: 'WIND',
+                                    value: s.wind(f.wind),
+                                    detail: 'Near the surface',
+                                  ),
+                                  _Metric(
+                                    icon: Icons.water_drop_outlined,
+                                    label: 'HUMIDITY',
+                                    value:
+                                        f.humidity == null
+                                            ? '—'
+                                            : '${f.humidity!.round()}%',
+                                    detail: 'Relative humidity',
+                                  ),
+                                  _Metric(
+                                    icon: Icons.umbrella_outlined,
+                                    label: 'PRECIPITATION',
+                                    value:
+                                        hours.firstOrNull?.rain == null
+                                            ? '—'
+                                            : '${hours.first.rain!.round()}%',
+                                    detail: 'Chance in the next hour',
+                                  ),
+                                ];
+                                return Wrap(
+                                  spacing: 12,
+                                  runSpacing: 12,
+                                  children:
+                                      tiles
+                                          .map(
+                                            (t) => SizedBox(
+                                              width:
+                                                  (constraints.maxWidth - 12) /
+                                                  2,
+                                              child: t,
+                                            ),
+                                          )
+                                          .toList(),
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 24),
+                            _SourceCard(
+                              forecast: f,
+                              settings: s,
+                              onTap: () => _settings(context),
+                            ),
+                          ],
+                          const SizedBox(height: 24),
+                          Center(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.phonelink_lock_outlined,
+                                  size: 14,
+                                  color: muted,
+                                ),
+                                const SizedBox(width: 7),
+                                Flexible(
+                                  child: Text(
+                                    s.hourly
+                                        ? 'Stored on your phone · hourly checks'
+                                        : 'Stored on your phone · manual updates',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: muted,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 36),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -399,7 +423,7 @@ class _SourceCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.public, size: 22, color: Color(0xff4d7566)),
+          const Icon(Icons.public, size: 22, color: Color(0xff416c8d)),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -472,7 +496,7 @@ class _Card extends StatelessWidget {
     decoration: BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(22),
-      border: Border.all(color: const Color(0xffe9ede5)),
+      border: Border.all(color: const Color(0xffdce7f0)),
     ),
     child: child,
   );

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../models.dart';
 
-const ink = Color(0xff193b38);
-const muted = Color(0xff6c827a);
-const mint = Color(0xffe4eee5);
+const ink = Color(0xff183c5b);
+const muted = Color(0xff526e84);
+const mint = Color(0xffe0edf7);
 const orange = Color(0xffef9c53);
 
 IconData weatherIcon(String summary) => switch (conditionKind(summary)) {

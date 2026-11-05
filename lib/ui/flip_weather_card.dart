@@ -15,12 +15,14 @@ class FlipWeatherCard extends StatefulWidget {
     this.light = false,
     this.paper = false,
     this.storageId,
+    this.background,
   });
   final String id, title;
   final Widget front, back;
   final double height;
   final bool light, paper;
   final String? storageId;
+  final Color? background;
   @override
   State<FlipWeatherCard> createState() => _FlipWeatherCardState();
 }
@@ -79,7 +81,7 @@ class _FlipWeatherCardState extends State<FlipWeatherCard>
           final angle = animation.value * math.pi;
           final showingBack = animation.value >= .5;
           final foreground =
-              widget.light || widget.paper ? ink : const Color(0xffe7f0df);
+              widget.light || widget.paper ? ink : const Color(0xffe8f2fc);
           return Transform(
             alignment: Alignment.center,
             transform:
@@ -92,11 +94,12 @@ class _FlipWeatherCardState extends State<FlipWeatherCard>
                   '${widget.title}, ${showingBack ? 'weather details' : 'forecast'}. Tap to flip.',
               child: Material(
                 color:
-                    widget.light
-                        ? const Color(0xffdcebd8)
+                    widget.background ??
+                    (widget.light
+                        ? const Color(0xffb5dffa)
                         : widget.paper
                         ? Colors.white
-                        : const Color(0xff1e3d34),
+                        : const Color(0xff203e59)),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
                   side: BorderSide(
@@ -104,8 +107,8 @@ class _FlipWeatherCardState extends State<FlipWeatherCard>
                         widget.light
                             ? Colors.transparent
                             : widget.paper
-                            ? const Color(0xffe0e8df)
-                            : const Color(0xff33554a),
+                            ? const Color(0xffd5e3ee)
+                            : const Color(0xff3c6080),
                   ),
                 ),
                 clipBehavior: Clip.antiAlias,

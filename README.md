@@ -24,6 +24,27 @@ The compact interface is validated at square/short window sizes, simulated camer
 
 Automatic mode prefers the national service for Canadian and US cities, then Open-Meteo. Manual selection uses the chosen service and reports failure without silently changing sources. No missing measurement is presented as zero. ECCC’s wind chill is ignored outside its applicable temperature range. Official alerts depend on the national feed and are unavailable with Open-Meteo; the app does not send alert notifications.
 
+## Sky and warning edges
+
+The app and all three widgets follow current conditions: sky blue in sunshine,
+blue-gray under clouds or fog, and gray in rain or thunderstorms. Clear nights
+replace the current sun icon with an approximate moon phase; the phase name also
+appears in the app. The full and compact forecasts show local sunrise and sunset,
+and the detailed widget includes both times. Provider times are used for their
+matching local day. Other days and providers use offline estimates from
+[NOAA's solar equations](https://gml.noaa.gov/grad/solcalc/solareqns.PDF).
+Polar day/night are named instead of inventing rise or set times. The moon is a
+mean-cycle illustration, mirrored in the southern hemisphere; it does not predict
+moonrise, visibility or the Moon's position in the sky.
+
+Active cold/frost, wind and thunderstorm alerts add stationary ice-crystal, wind
+and lightning edges. Multiple hazards can coexist. The artwork leaves controls
+usable and supplements the existing official alert text and colours. It clears
+when alerts expire on redraw, including native redraws while offline. Forecast
+conditions alone never generate warning edges; Open-Meteo supplies no official
+alerts. The app rechecks the sky and alert expiry each foreground minute; widgets
+update during Android's ordinary widget/forecast refreshes.
+
 ## Local data and refresh
 
 Settings and successful forecasts are persisted only in Android’s app storage. Forecasts are keyed by coordinates and source. The background isolate uses uncached preferences; switching cities clears old-city widget content immediately. Cache writes do not replace settings. Failed fetches preserve the last successful timestamp and forecast. Android cloud backup and device transfer are disabled for app data.
