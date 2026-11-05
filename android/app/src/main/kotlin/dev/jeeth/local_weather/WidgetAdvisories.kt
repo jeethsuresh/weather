@@ -48,7 +48,8 @@ internal object WidgetAdvisories {
         val location = root.findViewById<TextView>(R.id.place)
         val pill = root.findViewById<TextView>(R.id.advisory_pill)
         val margins = pill.layoutParams as ViewGroup.MarginLayoutParams
-        val pixels = root.paddingLeft + root.paddingRight +
+        val content = root.findViewById<View>(R.id.widget_content)
+        val pixels = content.paddingLeft + content.paddingRight +
             ceil(location.paint.measureText(place)) + location.compoundPaddingLeft + location.compoundPaddingRight +
             ceil(pill.paint.measureText(badge.label)) + pill.compoundPaddingLeft + pill.compoundPaddingRight +
             margins.marginStart + margins.marginEnd
