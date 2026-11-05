@@ -126,13 +126,15 @@ object WidgetSky {
         for (side in 0..1) {
             canvas.save()
             if (side == 1) { canvas.translate(width.toFloat(), height.toFloat()); canvas.rotate(180f) }
+            val edgeScale = if (wide) .45f else .6f
+            canvas.scale(edgeScale, edgeScale)
             for ((index, hazard) in hazards.withIndex()) {
                 val edge = Color.parseColor(if (hazard == "thunder") "#D6B8FF" else "#A0DDFA")
                 paint.shader = LinearGradient(0f, 0f, 20f, 0f, (edge and 0x00ffffff) or 0x70000000, Color.TRANSPARENT, Shader.TileMode.CLAMP)
-                paint.style = Paint.Style.FILL; canvas.drawRect(0f, 0f, 20f, height.toFloat(), paint)
+                paint.style = Paint.Style.FILL; canvas.drawRect(0f, 0f, 20f, height / edgeScale, paint)
                 paint.shader = null; paint.color = edge; paint.style = Paint.Style.STROKE; paint.strokeWidth = 1.8f; paint.strokeCap = Paint.Cap.ROUND
                 var y = 24f + index * 32
-                while (y < height) {
+                while (y < height / edgeScale) {
                     when (hazard) {
                         "frost" -> for (angle in 0..2) {
                             val dx = (cos(angle*PI/3)*7).toFloat(); val dy = (sin(angle*PI/3)*7).toFloat()

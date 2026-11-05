@@ -205,15 +205,17 @@ class _WarningPainter extends CustomPainter {
         canvas.translate(size.width, size.height);
         canvas.rotate(math.pi);
       }
+      canvas.scale(.5, .5);
+      final edgeHeight = size.height * 2;
       canvas.drawRect(
-        Rect.fromLTWH(0, 0, 22, size.height),
+        Rect.fromLTWH(0, 0, 22, edgeHeight),
         Paint()
           ..shader = LinearGradient(
             colors: [
               colors[side % colors.length].withValues(alpha: .6),
               Colors.transparent,
             ],
-          ).createShader(Rect.fromLTWH(0, 0, 22, size.height)),
+          ).createShader(Rect.fromLTWH(0, 0, 22, edgeHeight)),
       );
       var index = 0;
       for (final hazard in hazards.toList()..sort()) {
@@ -226,7 +228,7 @@ class _WarningPainter extends CustomPainter {
               ..strokeWidth = 1.6
               ..style = PaintingStyle.stroke
               ..strokeCap = StrokeCap.round;
-        for (double y = 42 + index * 46; y < size.height; y += 138) {
+        for (double y = 42 + index * 46; y < edgeHeight; y += 138) {
           if (hazard == 'frost') {
             for (var angle = 0; angle < 3; angle++) {
               final dx = math.cos(angle * math.pi / 3) * 7;
