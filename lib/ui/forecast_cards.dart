@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models.dart';
+import '../sky.dart';
+import 'sky_weather.dart';
 import 'flip_weather_card.dart';
 import 'forecast_chart_data.dart';
 import 'weather_charts.dart';
 import 'weather_style.dart';
 
-const _paper = Color(0xffe7f0df);
+const _paper = Color(0xffe8f2fc);
 
 class CurrentWeatherCard extends StatelessWidget {
   const CurrentWeatherCard({
@@ -32,6 +34,7 @@ class CurrentWeatherCard extends StatelessWidget {
       title:
           '${forecast.source == WeatherSource.nws ? 'CURRENT FORECAST' : 'RIGHT NOW'} · °${settings.fahrenheit ? 'F' : 'C'} · NEXT 24H',
       light: true,
+      background: SkyPalette.at(settings, forecast, now).card,
       height: height,
       front: _CurrentFront(
         forecast: forecast,
@@ -39,6 +42,7 @@ class CurrentWeatherCard extends StatelessWidget {
         hours: hours,
         range: range,
         compact: compact,
+        now: now,
       ),
       back: _PrecipitationBack(
         hours: hours,
@@ -69,10 +73,10 @@ class HourlyForecastStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     final scale =
         MediaQuery.textScalerOf(context).scale(1).clamp(1, 2.5).toDouble();
-    final divider = compact ? const Color(0xff385149) : const Color(0xffe0e8df);
+    final divider = compact ? const Color(0xff3d5972) : const Color(0xffd5e3ee);
     return Container(
       decoration: BoxDecoration(
-        color: compact ? const Color(0xff233d36) : Colors.white,
+        color: compact ? const Color(0xff203e59) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: divider),
       ),
@@ -118,7 +122,7 @@ class DailyForecastList extends StatelessWidget {
   Widget build(BuildContext context) {
     final fg = compact ? _paper : ink;
     final secondary = compact ? _paper.withValues(alpha: .65) : muted;
-    final divider = compact ? const Color(0xff385149) : const Color(0xffe0e8df);
+    final divider = compact ? const Color(0xff3d5972) : const Color(0xffd5e3ee);
     final scale =
         MediaQuery.textScalerOf(context).scale(1).clamp(1, 1.5).toDouble();
     Widget reading(double? value, {bool low = false}) => SizedBox(
@@ -138,7 +142,7 @@ class DailyForecastList extends StatelessWidget {
     );
     return Container(
       decoration: BoxDecoration(
-        color: compact ? const Color(0xff233d36) : Colors.white,
+        color: compact ? const Color(0xff203e59) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: divider),
       ),
@@ -246,12 +250,14 @@ class _CurrentFront extends StatelessWidget {
     required this.hours,
     required this.range,
     required this.compact,
+    required this.now,
   });
   final Forecast forecast;
   final Settings settings;
   final List<HourForecast> hours;
   final ForecastChartRange range;
   final bool compact;
+  final DateTime now;
   @override
   Widget build(BuildContext context) {
     final scale =
@@ -281,11 +287,19 @@ class _CurrentFront extends StatelessWidget {
               Flexible(
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
-                  child: Icon(
-                    weatherIcon(forecast.summary),
-                    size: compact ? 42 : 72,
-                    color: const Color(0xffa9793d),
-                  ),
+                  child:
+                      SolarDay.at(settings.place, now, forecast).nightAt(now) &&
+                              conditionKind(forecast.summary) == 'sun'
+                          ? MoonDisc(
+                            phase: moonPhase(now),
+                            southern: settings.place.latitude < 0,
+                            size: compact ? 42 : 72,
+                          )
+                          : Icon(
+                            weatherIcon(forecast.summary),
+                            size: compact ? 42 : 72,
+                            color: const Color(0xff387da9),
+                          ),
                 ),
               ),
             ],

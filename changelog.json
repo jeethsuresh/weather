@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "version": "1.4.6",
-  "versionCode": 11,
+  "version": "1.5.0",
+  "versionCode": 12,
   "changes": [
-    "Widget alerts name the actual hazard, such as Frost, Wind or Rainfall, using Environment Canada and NWS event information.",
-    "The widget keeps the location visible and reduces the alert to a coloured dot when the full location and hazard cannot fit together.",
-    "Open-Meteo forecasts do not include official weather alerts."
+    "Daybreak now follows the sky: sky blue in sunshine, blue-gray under clouds and gray in rain, across the app and widgets.",
+    "Clear nights show an approximate moon phase. Sunrise and sunset appear in the full and cover-screen forecasts and the detailed widget, with offline estimates when the source omits them.",
+    "Active frost, wind and thunderstorm alerts add subtle ice, wind and lightning edges to the app and every widget size. Expired alerts disappear on redraw; Open-Meteo does not supply official alerts."
   ]
 }

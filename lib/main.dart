@@ -69,14 +69,14 @@ class _DaybreakAppState extends State<DaybreakApp> with WidgetsBindingObserver {
     debugShowCheckedModeBanner: false,
     theme: ThemeData(
       useMaterial3: true,
-      scaffoldBackgroundColor: const Color(0xfff7f8f4),
+      scaffoldBackgroundColor: const Color(0xffe9f5ff),
       colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xff285a50),
-        surface: const Color(0xfff7f8f4),
+        seedColor: const Color(0xff2479b1),
+        surface: const Color(0xffe9f5ff),
       ),
       textTheme: ThemeData.light().textTheme.apply(
-        bodyColor: const Color(0xff193b38),
-        displayColor: const Color(0xff193b38),
+        bodyColor: const Color(0xff183c5b),
+        displayColor: const Color(0xff183c5b),
       ),
     ),
     home: WeatherScreen(controller: controller),
