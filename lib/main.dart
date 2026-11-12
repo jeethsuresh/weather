@@ -20,7 +20,9 @@ Future<void> main() async {
   await SystemChrome.setPreferredOrientations([]);
   // The forecast screen stays usable even if Android declines background setup.
   try {
-    await Workmanager().initialize(callbackDispatcher);
+    if (androidWeatherWidgets) {
+      await Workmanager().initialize(callbackDispatcher);
+    }
   } catch (_) {}
   runApp(const DaybreakApp());
 }

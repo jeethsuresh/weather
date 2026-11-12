@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
@@ -9,6 +10,8 @@ import 'repository.dart';
 import 'widget_data.dart';
 
 const refreshJob = 'dev.jeeth.daybreak.hourly';
+bool get androidWeatherWidgets =>
+    !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
@@ -36,6 +39,7 @@ void callbackDispatcher() {
 }
 
 Future<void> scheduleRefresh(bool enabled) async {
+  if (!androidWeatherWidgets) return;
   if (!enabled) {
     await Workmanager().cancelByUniqueName(refreshJob);
     return;
@@ -56,6 +60,7 @@ Future<void> publishWidget(
   Settings s,
   Forecast? f,
 ) async {
+  if (!androidWeatherWidgets) return;
   final current = await repository.settings();
   if (current.cacheKey != s.cacheKey || current.fahrenheit != s.fahrenheit) {
     return;

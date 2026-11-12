@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:home_widget/home_widget.dart';
+import '../background.dart';
 import 'package:intl/intl.dart';
 
 import '../controller.dart';
@@ -910,16 +911,17 @@ class SettingsSheet extends StatelessWidget {
                   onChanged:
                       (v) => controller.update(s.copyWith(fahrenheit: v)),
                 ),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Hourly background checks'),
-                  subtitle: const Text(
-                    'Android may delay checks to save battery. Opening the app catches up.',
-                    style: TextStyle(fontSize: 12),
+                if (androidWeatherWidgets)
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Hourly background checks'),
+                    subtitle: const Text(
+                      'Android may delay checks to save battery. Opening the app catches up.',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    value: s.hourly,
+                    onChanged: (v) => controller.update(s.copyWith(hourly: v)),
                   ),
-                  value: s.hourly,
-                  onChanged: (v) => controller.update(s.copyWith(hourly: v)),
-                ),
                 const Divider(height: 36),
                 const Text(
                   'Weather source',
@@ -953,60 +955,68 @@ class SettingsSheet extends StatelessWidget {
                               }
                             },
                   ),
-                const Divider(height: 36),
-                const Text(
-                  'Home-screen widgets',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 8),
-                for (final option in const [
-                  ('1×1', 'Temperature + icon', 'TemperatureWidgetProvider'),
-                  (
-                    '2×1',
-                    'Temperature, icon + weather',
-                    'SummaryWidgetProvider',
+                if (androidWeatherWidgets) ...[
+                  const Divider(height: 36),
+                  const Text(
+                    'Home-screen widgets',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                   ),
-                  (
-                    '2×2',
-                    'Weather, wind + precipitation',
-                    'WeatherWidgetProvider',
-                  ),
-                ])
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Container(
-                      width: 48,
-                      height: 40,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: ink,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        option.$1,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
+                  const SizedBox(height: 8),
+                  for (final option in const [
+                    ('1×1', 'Temperature + icon', 'TemperatureWidgetProvider'),
+                    (
+                      '2×1',
+                      'Temperature, icon + weather',
+                      'SummaryWidgetProvider',
+                    ),
+                    (
+                      '2×2',
+                      'Weather, wind + precipitation',
+                      'WeatherWidgetProvider',
+                    ),
+                  ])
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Container(
+                        width: 48,
+                        height: 40,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: ink,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          option.$1,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
+                      title: Text(
+                        option.$2,
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                      trailing: const Icon(Icons.add_circle_outline, size: 22),
+                      onTap: () => addWidget(context, option.$3),
                     ),
-                    title: Text(
-                      option.$2,
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                    trailing: const Icon(Icons.add_circle_outline, size: 22),
-                    onTap: () => addWidget(context, option.$3),
-                  ),
+                ],
                 const SizedBox(height: 24),
                 const Text(
                   'Your phone is the whole app',
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'No account, ads, analytics, or app server. Settings and forecasts are stored locally and excluded from Android backup. '
-                  'Forecast coordinates go directly to the selected weather service; city searches and location timezone lookup go to Open-Meteo. Area names use Android’s geocoder. Location is optional and requested only while the app is in use. The saved area is used for background weather checks.',
-                  style: TextStyle(color: muted, fontSize: 12, height: 1.6),
+                Text(
+                  'No account, ads, analytics, or app server. Settings and forecasts are stored locally. '
+                  'Forecast coordinates go directly to the selected weather service. City searches and location timezone lookup go to Open-Meteo. '
+                  'Location is optional and requested only while the app is in use.'
+                  '${androidWeatherWidgets ? ' The saved area is used for background weather checks.' : ''}',
+                  style: const TextStyle(
+                    color: muted,
+                    fontSize: 12,
+                    height: 1.6,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 const Text(

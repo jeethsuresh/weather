@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
@@ -62,11 +63,17 @@ class DeviceLocationProbe implements LocationProbe {
     final p = await Geolocator.getCurrentPosition(
       // Use Android's own location manager without asking users to enable
       // Google's optional Location Accuracy/crowdsourcing service.
-      locationSettings: AndroidSettings(
-        forceLocationManager: true,
-        accuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 20),
-      ),
+      locationSettings:
+          defaultTargetPlatform == TargetPlatform.android
+              ? AndroidSettings(
+                forceLocationManager: true,
+                accuracy: LocationAccuracy.high,
+                timeLimit: const Duration(seconds: 20),
+              )
+              : const LocationSettings(
+                accuracy: LocationAccuracy.high,
+                timeLimit: Duration(seconds: 20),
+              ),
     );
     return LocationFix(p.latitude, p.longitude, p.accuracy, p.timestamp);
   }
