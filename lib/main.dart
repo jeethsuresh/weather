@@ -18,9 +18,9 @@ Future<void> main() async {
   tzdata.initializeTimeZones();
   // Let the current display choose its orientation when the phone opens/closes.
   await SystemChrome.setPreferredOrientations([]);
-  // The forecast screen stays usable even if Android declines background setup.
+  // Keep the forecast screen usable when background setup is unavailable.
   try {
-    if (androidWeatherWidgets) {
+    if (androidWeatherWidgets || iosWeatherWidgets) {
       await Workmanager().initialize(callbackDispatcher);
     }
   } catch (_) {}

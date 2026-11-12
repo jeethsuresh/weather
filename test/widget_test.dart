@@ -52,6 +52,18 @@ void main() {
     ],
   );
 
+  test('iOS widget solar dates follow the forecast location across DST', () {
+    final fallBack = DateTime.utc(2026, 11, 1, 18);
+    final payload = iosWidgetPayload(const Settings(), forecast(), fallBack);
+    final solar = (payload['solarDays'] as List).cast<Json>();
+    DateTime date(Json value, String key) =>
+        DateTime.fromMillisecondsSinceEpoch(value[key] as int, isUtc: true);
+    expect(date(solar[0], 'date'), DateTime.utc(2026, 11, 1, 4));
+    expect(date(solar[1], 'date'), DateTime.utc(2026, 11, 2, 5));
+    expect(date(solar[2], 'date'), DateTime.utc(2026, 11, 3, 5));
+    expect(Place.toronto.local(date(solar[1], 'sunrise')).day, 2);
+  });
+
   test('widget snapshot converts units and identifies precipitation hour', () {
     final celsius = widgetPayload(const Settings(), forecast(), now);
     expect(celsius['temperature'], '-12°');

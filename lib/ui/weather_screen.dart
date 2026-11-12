@@ -911,13 +911,15 @@ class SettingsSheet extends StatelessWidget {
                   onChanged:
                       (v) => controller.update(s.copyWith(fahrenheit: v)),
                 ),
-                if (androidWeatherWidgets)
+                if (androidWeatherWidgets || iosWeatherWidgets)
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     title: const Text('Hourly background checks'),
-                    subtitle: const Text(
-                      'Android may delay checks to save battery. Opening the app catches up.',
-                      style: TextStyle(fontSize: 12),
+                    subtitle: Text(
+                      iosWeatherWidgets
+                          ? 'iOS chooses when checks run. Opening the app catches up.'
+                          : 'Android may delay checks to save battery. Opening the app catches up.',
+                      style: const TextStyle(fontSize: 12),
                     ),
                     value: s.hourly,
                     onChanged: (v) => controller.update(s.copyWith(hourly: v)),
@@ -1000,6 +1002,17 @@ class SettingsSheet extends StatelessWidget {
                       trailing: const Icon(Icons.add_circle_outline, size: 22),
                       onTap: () => addWidget(context, option.$3),
                     ),
+                ] else if (iosWeatherWidgets) ...[
+                  const Divider(height: 36),
+                  const Text(
+                    'Home-screen widgets',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Touch and hold the Home Screen, tap Edit, then Add Widget and choose Daybreak.',
+                    style: TextStyle(color: muted, fontSize: 12),
+                  ),
                 ],
                 const SizedBox(height: 24),
                 const Text(
@@ -1011,7 +1024,7 @@ class SettingsSheet extends StatelessWidget {
                   'No account, ads, analytics, or app server. Settings and forecasts are stored locally. '
                   'Forecast coordinates go directly to the selected weather service. City searches and location timezone lookup go to Open-Meteo. '
                   'Location is optional and requested only while the app is in use.'
-                  '${androidWeatherWidgets ? ' The saved area is used for background weather checks.' : ''}',
+                  '${androidWeatherWidgets || iosWeatherWidgets ? ' The saved area is used for background weather checks.' : ''}',
                   style: const TextStyle(
                     color: muted,
                     fontSize: 12,

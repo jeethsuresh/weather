@@ -12,6 +12,8 @@ import 'widget_data.dart';
 const refreshJob = 'dev.jeeth.daybreak.hourly';
 bool get androidWeatherWidgets =>
     !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+bool get iosWeatherWidgets =>
+    !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
@@ -39,7 +41,7 @@ void callbackDispatcher() {
 }
 
 Future<void> scheduleRefresh(bool enabled) async {
-  if (!androidWeatherWidgets) return;
+  if (!androidWeatherWidgets && !iosWeatherWidgets) return;
   if (!enabled) {
     await Workmanager().cancelByUniqueName(refreshJob);
     return;
@@ -60,13 +62,24 @@ Future<void> publishWidget(
   Settings s,
   Forecast? f,
 ) async {
-  if (!androidWeatherWidgets) return;
+  if (!androidWeatherWidgets && !iosWeatherWidgets) return;
   final current = await repository.settings();
   if (current.cacheKey != s.cacheKey || current.fahrenheit != s.fahrenheit) {
     return;
   }
-  final payload = widgetPayload(s, f, DateTime.now());
-  await HomeWidget.saveWidgetData<String>('weather', jsonEncode(payload));
+  final now = DateTime.now();
+  if (iosWeatherWidgets) {
+    final snapshot = jsonEncode(iosWidgetPayload(s, f, now));
+    await HomeWidget.setAppGroupId('group.dev.jeeth.daybreak');
+    if (await HomeWidget.getWidgetData<String>('weather') == snapshot) return;
+    await HomeWidget.saveWidgetData<String>('weather', snapshot);
+    await HomeWidget.updateWidget(iOSName: 'DaybreakWeather');
+    return;
+  }
+  await HomeWidget.saveWidgetData<String>(
+    'weather',
+    jsonEncode(widgetPayload(s, f, now)),
+  );
   for (final provider in widgetProviders) {
     await HomeWidget.updateWidget(androidName: provider);
   }
