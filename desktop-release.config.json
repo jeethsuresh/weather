@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "slug": "daybreak",
+  "repository": "jeethsuresh/weather",
+  "name": "Daybreak",
+  "directory": ".",
+  "engine": "flutter",
+  "version": "1.5.1",
+  "versionCode": 1501,
+  "entries": {
+    "macos": "Daybreak.app"
+  },
+  "changes": [
+    "Daybreak is available on macOS with city search, saved forecasts, and weather alerts."
+  ]
+}

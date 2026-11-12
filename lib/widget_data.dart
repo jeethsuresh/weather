@@ -1,5 +1,7 @@
 import 'package:intl/intl.dart';
+import 'package:timezone/timezone.dart' as tz;
 import 'models.dart';
+import 'sky.dart';
 
 /// One cached snapshot shared by all three native widget sizes.
 const widgetProviders = [
@@ -72,6 +74,32 @@ Json widgetPayload(Settings settings, Forecast? forecast, DateTime now) {
     ],
     'kind': forecast == null ? 'unknown' : conditionKind(forecast.summary),
   };
+}
+
+Json iosWidgetPayload(Settings settings, Forecast? forecast, DateTime now) {
+  final payload = widgetPayload(settings, forecast, now);
+  final place = settings.place;
+  final local = place.local(now);
+  final solarDays = <Json>[];
+  for (var offset = 0; offset < 3; offset++) {
+    final date =
+        local is tz.TZDateTime
+            ? tz.TZDateTime(
+              local.location,
+              local.year,
+              local.month,
+              local.day + offset,
+            )
+            : DateTime.utc(local.year, local.month, local.day + offset);
+    final solar = SolarDay.at(place, date, forecast);
+    solarDays.add({
+      'date': date.millisecondsSinceEpoch,
+      'sunrise': solar.sunrise?.millisecondsSinceEpoch,
+      'sunset': solar.sunset?.millisecondsSinceEpoch,
+      'polarDay': solar.polarDay,
+    });
+  }
+  return {...payload, 'solarDays': solarDays};
 }
 
 Json widgetAdvisory(WeatherAlert alert) {

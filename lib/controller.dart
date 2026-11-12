@@ -36,9 +36,14 @@ class WeatherController extends ChangeNotifier {
   Future<void> initialize() async {
     settings = await repository.settings();
     forecast = await repository.cached(settings);
+    final cached = forecast;
+    final selected = settings;
     initialized = true;
     _notify();
     await _schedule();
+    if (cached != null && _revision == 0 && !_disposed) {
+      await _publish(selected, cached);
+    }
     await refresh();
   }
 
