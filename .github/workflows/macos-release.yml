@@ -1,0 +1,141 @@
+name: Daybreak macOS release
+
+on:
+  push:
+    branches: [main]
+    paths: [desktop-release.config.json]
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/macos-release.yml
+      - desktop-release.config.json
+      - macos/**
+      - lib/**
+      - test/**
+      - pubspec.*
+      - scripts/apple_signing.py
+      - scripts/desktop-release.py
+      - scripts/macos-sign.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: daybreak-macos-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    outputs:
+      publish: ${{ steps.release.outputs.publish }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - run: python3 scripts/desktop-release.py validate
+      - name: Check for a new desktop release
+        id: release
+        if: github.ref == 'refs/heads/main' && github.repository == 'jeethsuresh/weather'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/desktop-release.py plan
+
+  build:
+    needs: plan
+    if: github.event_name == 'pull_request' || needs.plan.outputs.publish == 'true'
+    runs-on: macos-26
+    timeout-minutes: 45
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.0.1.app/Contents/Developer
+      FLUTTER_SUPPRESS_ANALYTICS: 'true'
+      DART_SUPPRESS_ANALYTICS: 'true'
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Install the pinned Flutter SDK
+        run: |
+          git clone --depth 1 --branch 3.32.0-0.2.pre https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+          test "$(git -C "$RUNNER_TEMP/flutter" rev-parse HEAD)" = d3abd00e69a89a615e13969c02832ef1e0119639
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+      - name: Test and build Daybreak for both Mac architectures
+        run: |
+          flutter --no-version-check pub get --enforce-lockfile
+          flutter --no-version-check analyze --no-pub
+          flutter --no-version-check test --no-pub
+          version="$(python3 -c 'import json; print(json.load(open("desktop-release.config.json"))["version"])')"
+          code="$(python3 -c 'import json; print(json.load(open("desktop-release.config.json"))["versionCode"])')"
+          flutter --no-version-check build macos --release --no-pub --build-name "$version" --build-number "$code"
+          app=build/macos/Build/Products/Release/Daybreak.app
+          executable="$app/Contents/MacOS/Daybreak"
+          lipo "$executable" -verify_arch arm64 x86_64
+          codesign --verify --deep --strict "$app"
+          "$executable" &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true' EXIT
+          sleep 4
+          kill -0 "$pid"
+          mkdir -p desktop-dist
+          ditto -c -k --keepParent "$app" "desktop-dist/daybreak-$version-mac-arm64.zip"
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: daybreak-macos-package
+          path: desktop-dist/*.zip
+          if-no-files-found: error
+          retention-days: 7
+
+  sign:
+    needs: [plan, build]
+    if: needs.plan.outputs.publish == 'true'
+    runs-on: macos-26
+    timeout-minutes: 30
+    environment: macos-release
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: daybreak-macos-package
+          path: desktop-dist
+      - name: Sign, notarize and verify the universal app
+        env:
+          MAC_CERTIFICATE_P12_BASE64: ${{ secrets.MAC_CERTIFICATE_P12_BASE64 }}
+          MAC_CERTIFICATE_PASSWORD: ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
+          MAC_NOTARY_KEY_BASE64: ${{ secrets.MAC_NOTARY_KEY_BASE64 }}
+          MAC_NOTARY_KEY_ID: ${{ secrets.MAC_NOTARY_KEY_ID }}
+          MAC_NOTARY_ISSUER_ID: ${{ secrets.MAC_NOTARY_ISSUER_ID }}
+        run: |
+          version="$(python3 -c 'import json; print(json.load(open("desktop-release.config.json"))["version"])')"
+          arm="desktop-dist/daybreak-$version-mac-arm64.zip"
+          python3 scripts/macos-sign.py --entry Daybreak.app --bundle-id dev.jeeth.daybreak.macos \
+            --entitlements macos/Runner/Release.entitlements "$arm"
+          cp "$arm" "desktop-dist/daybreak-$version-mac-x64.zip"
+          python3 scripts/desktop-release.py stage
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: signed-daybreak-desktop-release
+          path: desktop-dist/*
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    if: github.ref == 'refs/heads/main' && github.repository == 'jeethsuresh/weather'
+    needs: sign
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: signed-daybreak-desktop-release
+          path: desktop-dist
+      - name: Publish the verified desktop release for Private Store
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/desktop-release.py publish
