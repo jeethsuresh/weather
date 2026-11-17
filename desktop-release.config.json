@@ -5,12 +5,12 @@
   "name": "Daybreak",
   "directory": ".",
   "engine": "flutter",
-  "version": "1.5.1",
-  "versionCode": 1501,
+  "version": "1.5.2",
+  "versionCode": 1502,
   "entries": {
     "macos": "Daybreak.app"
   },
   "changes": [
-    "Daybreak is available on macOS with city search, saved forecasts, and weather alerts."
+    "Daybreak shows its sun icon in Finder and the Dock."
   ]
 }
