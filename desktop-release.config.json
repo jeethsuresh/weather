@@ -5,12 +5,15 @@
   "name": "Daybreak",
   "directory": ".",
   "engine": "flutter",
-  "version": "1.5.2",
-  "versionCode": 1502,
+  "version": "1.6.0",
+  "versionCode": 1600,
   "entries": {
     "macos": "Daybreak.app"
   },
   "changes": [
-    "Daybreak shows its sun icon in Finder and the Dock."
+    "Explore the next 24 hours by dragging the forecast or choosing an hour, with matching temperature and rain readings.",
+    "Keep your chosen forecast hour when switching between compact and full layouts, with keyboard controls and clearer compact labels.",
+    "Turning on reduced motion immediately settles an active forecast-card flip.",
+    "Changed readings from newer forecasts receive a brief outline; the current city is easier to identify."
   ]
 }

@@ -65,10 +65,14 @@ class HourlyForecastStrip extends StatelessWidget {
     required this.hours,
     required this.settings,
     this.compact = false,
+    this.selectedTime,
+    this.onSelected,
   });
   final List<HourForecast> hours;
   final Settings settings;
   final bool compact;
+  final DateTime? selectedTime;
+  final ValueChanged<HourForecast>? onSelected;
   @override
   Widget build(BuildContext context) {
     final scale =
@@ -81,7 +85,7 @@ class HourlyForecastStrip extends StatelessWidget {
         border: Border.all(color: divider),
       ),
       clipBehavior: Clip.antiAlias,
-      height: 96 * scale,
+      height: 108 * scale,
       child: ListView.separated(
         key: const PageStorageKey('hourly-pips'),
         scrollDirection: Axis.horizontal,
@@ -95,13 +99,23 @@ class HourlyForecastStrip extends StatelessWidget {
               color: divider,
             ),
         itemBuilder:
-            (_, i) => _HourPip(
-              key: ValueKey('hour-pip-${hours[i].time.toIso8601String()}'),
-              hour: hours[i],
-              settings: settings,
-              first: i == 0,
-              dark: compact,
-              width: 60 * scale.clamp(1, 1.8),
+            (_, i) => Semantics(
+              selected: selectedTime == hours[i].time,
+              button: onSelected != null,
+              child: InkWell(
+                onTap: onSelected == null ? null : () => onSelected!(hours[i]),
+                child: _HourPip(
+                  key: ValueKey('hour-pip-${hours[i].time.toIso8601String()}'),
+                  hour: hours[i],
+                  settings: settings,
+                  first:
+                      selectedTime == null
+                          ? i == 0
+                          : selectedTime == hours[i].time,
+                  dark: compact,
+                  width: 60 * scale.clamp(1, 1.8),
+                ),
+              ),
             ),
       ),
     );
@@ -201,7 +215,7 @@ class DailyForecastList extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     color: secondary,
-                                    fontSize: 10,
+                                    fontSize: 11,
                                     height: 1.1,
                                   ),
                                 ),
@@ -223,7 +237,7 @@ class DailyForecastList extends StatelessWidget {
                             day.summary,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(color: fg, fontSize: 11),
+                            style: TextStyle(color: fg, fontSize: 12),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -491,7 +505,9 @@ class _HourPip extends StatelessWidget {
             FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(
-                settings.temperature(hour.temperature),
+                hour.temperature.isFinite
+                    ? settings.temperature(hour.temperature)
+                    : '—',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
@@ -501,7 +517,7 @@ class _HourPip extends StatelessWidget {
             ),
             Text(
               probability(hour.rain),
-              style: TextStyle(fontSize: 10, color: secondary),
+              style: TextStyle(fontSize: 12, color: secondary),
             ),
           ],
         ),

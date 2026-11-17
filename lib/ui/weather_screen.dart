@@ -17,6 +17,8 @@ import 'sky_weather.dart';
 import 'compact_weather.dart';
 import 'weather_style.dart';
 import 'forecast_cards.dart';
+import 'forecast_explorer.dart';
+import 'forecast_feedback.dart';
 
 class WeatherScreen extends StatefulWidget {
   const WeatherScreen({super.key, required this.controller});
@@ -218,14 +220,17 @@ class _WeatherScreenState extends State<WeatherScreen> {
                                       onChoosePlace: () => _places(context),
                                     )
                                   else ...[
-                                    CurrentWeatherCard(
+                                    ForecastRefreshFeedback(
                                       key: ValueKey(
                                         'card-current-${s.place.id}',
                                       ),
                                       forecast: f,
-                                      settings: s,
-                                      now: now,
-                                      height: 280 * scale,
+                                      child: CurrentWeatherCard(
+                                        forecast: f,
+                                        settings: s,
+                                        now: now,
+                                        height: 280 * scale,
+                                      ),
                                     ),
                                     SkyDetails(
                                       settings: s,
@@ -276,11 +281,12 @@ class _WeatherScreenState extends State<WeatherScreen> {
                                         ),
                                       )
                                     else
-                                      HourlyForecastStrip(
+                                      ForecastExplorer(
                                         key: ValueKey(
                                           'card-hours-${s.place.id}',
                                         ),
-                                        hours: hours,
+                                        forecast: f,
+                                        now: now,
                                         settings: s,
                                       ),
                                     const SizedBox(height: 16),
@@ -817,11 +823,19 @@ class _PlaceSheetState extends State<PlaceSheet> {
               ),
             for (final place in places)
               ListTile(
+                key: ValueKey('city-${place.id}'),
+                selected: place.id == widget.controller.settings.place.id,
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.location_city_outlined),
                 title: Text(place.name),
                 subtitle: Text(place.subtitle),
-                trailing: const Icon(Icons.north_east, size: 18),
+                trailing:
+                    place.id == widget.controller.settings.place.id
+                        ? const Icon(
+                          Icons.check_circle_outline,
+                          semanticLabel: 'Current city',
+                        )
+                        : const Icon(Icons.north_east, size: 18),
                 onTap: () {
                   Navigator.pop(context);
                   unawaited(
@@ -848,10 +862,20 @@ class _PlaceSheetState extends State<PlaceSheet> {
 class SettingsSheet extends StatelessWidget {
   const SettingsSheet({super.key, required this.controller});
   final WeatherController controller;
-  Future<void> openLink(String url) async {
-    await const MethodChannel(
-      'dev.jeeth.daybreak/actions',
-    ).invokeMethod<void>('openLink', {'url': url});
+  Future<void> openLink(BuildContext context, String url) async {
+    try {
+      await const MethodChannel(
+        'dev.jeeth.daybreak/actions',
+      ).invokeMethod<void>('openLink', {'url': url});
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not open your browser. Try again.'),
+          ),
+        );
+      }
+    }
   }
 
   Future<void> addWidget(BuildContext context, String provider) async {
@@ -1038,22 +1062,27 @@ class SettingsSheet extends StatelessWidget {
                 ),
                 TextButton(
                   onPressed:
-                      () => openLink('https://eccc-msc.github.io/open-data/'),
+                      () => openLink(
+                        context,
+                        'https://eccc-msc.github.io/open-data/',
+                      ),
                   child: const Text('Environment and Climate Change Canada'),
                 ),
                 TextButton(
                   onPressed:
                       () => openLink(
+                        context,
                         'https://www.weather.gov/documentation/services-web-api',
                       ),
                   child: const Text('NOAA / National Weather Service'),
                 ),
                 TextButton(
-                  onPressed: () => openLink('https://open-meteo.com/'),
+                  onPressed: () => openLink(context, 'https://open-meteo.com/'),
                   child: const Text('Weather data by Open-Meteo · CC BY 4.0'),
                 ),
                 TextButton(
-                  onPressed: () => openLink('https://www.geonames.org/'),
+                  onPressed:
+                      () => openLink(context, 'https://www.geonames.org/'),
                   child: const Text('Location data by GeoNames · CC BY 4.0'),
                 ),
                 const Text(
@@ -1064,7 +1093,7 @@ class SettingsSheet extends StatelessWidget {
                 const SizedBox(height: 16),
                 const Center(
                   child: Text(
-                    'DAYBREAK  /  1.4',
+                    'DAYBREAK  /  1.6',
                     style: TextStyle(
                       fontSize: 10,
                       color: muted,

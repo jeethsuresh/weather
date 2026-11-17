@@ -18,6 +18,8 @@ class WeatherChart extends StatelessWidget {
     this.low,
     this.high,
     this.range,
+    this.selectedTime,
+    this.onSelected,
   });
   final List<HourForecast> hours;
   final Settings settings;
@@ -25,6 +27,8 @@ class WeatherChart extends StatelessWidget {
   final bool dark;
   final double? low, high;
   final ForecastChartRange? range;
+  final DateTime? selectedTime;
+  final ValueChanged<HourForecast>? onSelected;
   @override
   Widget build(BuildContext context) {
     final precipitation = kind == WeatherChartKind.precipitation;
@@ -51,7 +55,7 @@ class WeatherChart extends StatelessWidget {
         precipitation
             ? 'Hourly precipitation chance, from ${min.round()} to ${max.round()} percent. Missing hours are gaps.'
             : 'Hourly temperature, from ${settings.temperature(min)} to ${settings.temperature(max)} ${settings.fahrenheit ? 'Fahrenheit' : 'Celsius'}. Missing hours are gaps.';
-    return Semantics(
+    final chart = Semantics(
       label: label,
       image: true,
       child: ExcludeSemantics(
@@ -65,10 +69,50 @@ class WeatherChart extends StatelessWidget {
             high,
             MediaQuery.textScalerOf(context).scale(1).clamp(1, 1.5).toDouble(),
             range,
+            selectedTime,
           ),
           size: Size.infinite,
         ),
       ),
+    );
+    if (onSelected == null) return chart;
+    return LayoutBuilder(
+      builder: (context, bounds) {
+        void select(double x) {
+          final start = range?.start ?? hours.first.time;
+          final end = range?.end ?? hours.last.time;
+          final textScale = MediaQuery.textScalerOf(context).scale(1).clamp(1, 1.5);
+          final left = precipitation ? 29.0 * textScale : 3.0;
+          final fraction = ((x - left) / math.max(1, bounds.maxWidth - left - 4)).clamp(
+            0.0,
+            1.0,
+          );
+          final requested = start.add(
+            Duration(
+              milliseconds:
+                  ((end.millisecondsSinceEpoch - start.millisecondsSinceEpoch) *
+                          fraction)
+                      .round(),
+            ),
+          );
+          final nearest = hours.reduce(
+            (a, b) =>
+                a.time.difference(requested).abs() <=
+                        b.time.difference(requested).abs()
+                    ? a
+                    : b,
+          );
+          onSelected!(nearest);
+        }
+
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapUp: (d) => select(d.localPosition.dx),
+          onHorizontalDragStart: (d) => select(d.localPosition.dx),
+          onHorizontalDragUpdate: (d) => select(d.localPosition.dx),
+          child: chart,
+        );
+      },
     );
   }
 }
@@ -83,6 +127,7 @@ class _WeatherChartPainter extends CustomPainter {
     this.high,
     this.scale,
     this.range,
+    this.selectedTime,
   );
   final List<HourForecast> hours;
   final Settings settings;
@@ -91,6 +136,7 @@ class _WeatherChartPainter extends CustomPainter {
   final double? low, high;
   final double scale;
   final ForecastChartRange? range;
+  final DateTime? selectedTime;
   @override
   void paint(Canvas canvas, Size size) {
     if (size.width < 30 || size.height < 24 || hours.isEmpty) return;
@@ -101,7 +147,7 @@ class _WeatherChartPainter extends CustomPainter {
             ? (dark ? const Color(0xff9ed1e2) : const Color(0xff387d97))
             : (dark ? const Color(0xfff2c18b) : const Color(0xffb47b3e));
     final left = precip ? 29.0 * scale : 3.0;
-    final bottom = size.height - 16 * scale;
+    final bottom = size.height - 18 * scale;
     if (bottom <= 5 || left >= size.width - 5) return;
     final plot = Rect.fromLTRB(left, 4, size.width - 4, bottom);
     double? value(HourForecast h) => precip ? h.rain : h.temperature;
@@ -137,7 +183,7 @@ class _WeatherChartPainter extends CustomPainter {
           style: TextStyle(
             color: fg,
             fontFamily: 'Roboto',
-            fontSize: 9 * scale,
+            fontSize: 11 * scale,
             height: 1.1,
           ),
         ),
@@ -255,6 +301,21 @@ class _WeatherChartPainter extends CustomPainter {
       }
       canvas.restore();
     }
+    if (selectedTime != null) {
+      final selected = hours.where((h) => h.time == selectedTime).firstOrNull;
+      final v = selected == null ? null : value(selected);
+      if (selected != null && v != null && v.isFinite) {
+        final xx = x(selected);
+        paint
+          ..color = accent.withValues(alpha: .55)
+          ..strokeWidth = 1;
+        canvas.drawLine(Offset(xx, plot.top), Offset(xx, plot.bottom), paint);
+        paint.color = dark ? const Color(0xff203e59) : Colors.white;
+        canvas.drawCircle(Offset(xx, y(v)), 5, paint);
+        paint.color = accent;
+        canvas.drawCircle(Offset(xx, y(v)), 3.2, paint);
+      }
+    }
     String time(DateTime at) {
       final local = settings.place.local(at);
       return DateFormat(
@@ -291,6 +352,7 @@ class _WeatherChartPainter extends CustomPainter {
       old.high != high ||
       old.range?.start != range?.start ||
       old.range?.end != range?.end ||
+      old.selectedTime != selectedTime ||
       old.scale != scale;
 }
 
