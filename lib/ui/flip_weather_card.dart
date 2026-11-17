@@ -47,6 +47,9 @@ class _FlipWeatherCardState extends State<FlipWeatherCard>
       animation.value = back ? 1 : 0;
       restored = true;
     }
+    if (MediaQuery.disableAnimationsOf(context) && animation.isAnimating) {
+      animation.value = back ? 1 : 0;
+    }
   }
 
   void flip() {
@@ -126,7 +129,7 @@ class _FlipWeatherCardState extends State<FlipWeatherCard>
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             color: foreground.withValues(alpha: .8),
-                            fontSize: 10,
+                            fontSize: 11,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 1.2,
                           ),
@@ -156,7 +159,7 @@ class _FlipWeatherCardState extends State<FlipWeatherCard>
                                     : 'Tap for rain & wind',
                                 style: TextStyle(
                                   color: foreground.withValues(alpha: .7),
-                                  fontSize: 10,
+                                  fontSize: 12,
                                 ),
                               ),
                             ),

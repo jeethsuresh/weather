@@ -7,6 +7,8 @@ import '../models.dart';
 import 'weather_style.dart';
 import 'sky_weather.dart';
 import 'forecast_cards.dart';
+import 'forecast_explorer.dart';
+import 'forecast_feedback.dart';
 export 'flip_weather_card.dart';
 
 /// Use the app window, which changes when a Razr opens or closes, rather than
@@ -88,7 +90,7 @@ class CompactWeatherView extends StatelessWidget {
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
                                         color: _soft,
-                                        fontSize: 10,
+                                        fontSize: 11,
                                       ),
                                     ),
                                   ],
@@ -163,13 +165,16 @@ class CompactWeatherView extends StatelessWidget {
                             if (f.notice != null) _CompactNotice(f.notice!),
                             if (controller.backgroundError != null)
                               _CompactNotice(controller.backgroundError!),
-                            CurrentWeatherCard(
+                            ForecastRefreshFeedback(
                               key: ValueKey('card-current-${s.place.id}'),
                               forecast: f,
-                              settings: s,
-                              now: now,
-                              compact: true,
-                              height: currentHeight * scale,
+                              child: CurrentWeatherCard(
+                                forecast: f,
+                                settings: s,
+                                now: now,
+                                compact: true,
+                                height: currentHeight * scale,
+                              ),
                             ),
                             SkyDetails(
                               settings: s,
@@ -183,16 +188,17 @@ class CompactWeatherView extends StatelessWidget {
                                 child: Text(
                                   'THE HOURS AHEAD',
                                   style: TextStyle(
-                                    fontSize: 10,
+                                    fontSize: 11,
                                     letterSpacing: 1.7,
                                     color: _soft,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ),
-                              HourlyForecastStrip(
+                              ForecastExplorer(
                                 key: ValueKey('card-hours-${s.place.id}'),
-                                hours: hours,
+                                forecast: f,
+                                now: now,
                                 settings: s,
                                 compact: true,
                               ),
@@ -206,7 +212,7 @@ class CompactWeatherView extends StatelessWidget {
                                       child: Text(
                                         'A LITTLE FURTHER OUT',
                                         style: TextStyle(
-                                          fontSize: 10,
+                                          fontSize: 11,
                                           letterSpacing: 1.7,
                                           color: _soft,
                                           fontWeight: FontWeight.w600,
@@ -216,7 +222,7 @@ class CompactWeatherView extends StatelessWidget {
                                     Text(
                                       'HIGH / LOW',
                                       style: TextStyle(
-                                        fontSize: 8,
+                                        fontSize: 11,
                                         color: _soft,
                                       ),
                                     ),
@@ -281,7 +287,7 @@ class CompactWeatherView extends StatelessWidget {
                               const Text(
                                 'Open-Meteo · CC BY 4.0',
                                 textAlign: TextAlign.center,
-                                style: TextStyle(color: _soft, fontSize: 10),
+                                style: TextStyle(color: _soft, fontSize: 11),
                               ),
                           ],
                         ],
