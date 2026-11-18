@@ -1,10 +1,8 @@
 {
   "schemaVersion": 1,
-  "version": "1.7.0",
-  "versionCode": 15,
+  "version": "1.7.1",
+  "versionCode": 16,
   "changes": [
-    "Explore future hours directly in the main weather card: the temperature, sky and rain details follow the original graph or hour strip.",
-    "Removed the duplicate forecast graph, detached readout and repeated flip prompts.",
-    "Weather controls respond to press and release with elastic motion that respects reduced motion and leaves readings clear."
+    "Removed the moon-phase caption and duplicate moon icon below the main weather card for a cleaner forecast."
   ]
 }

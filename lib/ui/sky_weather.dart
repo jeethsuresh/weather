@@ -58,9 +58,6 @@ class SkyDetails extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final solar = SolarDay.at(settings.place, now, forecast);
-    final phase = moonPhase(now);
-    final clearNight =
-        solar.nightAt(now) && conditionKind(forecast.summary) == 'sun';
     final color = dark ? const Color(0xffd5e9fa) : const Color(0xff244e70);
     String time(DateTime? value) =>
         value == null
@@ -85,22 +82,6 @@ class SkyDetails extends StatelessWidget {
             Text(
               solar.polarDay ? 'Midnight sun' : 'Polar night',
               style: TextStyle(color: color, fontSize: 12),
-            ),
-          if (clearNight)
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                MoonDisc(
-                  phase: phase,
-                  southern: settings.place.latitude < 0,
-                  size: 22,
-                ),
-                const SizedBox(width: 7),
-                Text(
-                  '${moonPhaseName(phase)} · approx.',
-                  style: TextStyle(color: color, fontSize: 12),
-                ),
-              ],
             ),
         ],
       ),
