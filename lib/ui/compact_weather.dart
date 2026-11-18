@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'interaction_juice.dart';
 import '../controller.dart';
 import '../models.dart';
 import 'weather_style.dart';
@@ -24,7 +25,9 @@ class CompactWeatherView extends StatelessWidget {
     required this.controller,
     required this.onPlaces,
     required this.onSettings,
+    required this.selection,
   });
+  final ForecastSelectionController selection;
   final WeatherController controller;
   final VoidCallback onPlaces, onSettings;
 
@@ -106,7 +109,7 @@ class CompactWeatherView extends StatelessWidget {
                         ),
                       ),
                     ),
-                    IconButton(
+                    WeatherActionButton(
                       tooltip: 'Refresh forecast',
                       onPressed:
                           controller.loading
@@ -125,7 +128,7 @@ class CompactWeatherView extends StatelessWidget {
                               )
                               : const Icon(Icons.refresh, size: 21),
                     ),
-                    IconButton(
+                    WeatherActionButton(
                       tooltip: 'Weather settings',
                       onPressed: onSettings,
                       icon: const Icon(Icons.tune, color: _soft, size: 21),
@@ -169,6 +172,7 @@ class CompactWeatherView extends StatelessWidget {
                               key: ValueKey('card-current-${s.place.id}'),
                               forecast: f,
                               child: CurrentWeatherCard(
+                                selection: selection,
                                 forecast: f,
                                 settings: s,
                                 now: now,
@@ -196,6 +200,7 @@ class CompactWeatherView extends StatelessWidget {
                                 ),
                               ),
                               ForecastExplorer(
+                                selection: selection,
                                 key: ValueKey('card-hours-${s.place.id}'),
                                 forecast: f,
                                 now: now,

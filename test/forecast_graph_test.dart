@@ -245,7 +245,7 @@ void main() {
       );
       final range = tester.widget<WeatherChart>(charts()).range!;
       expect(range.end.difference(range.start), const Duration(hours: 24));
-      await tester.tap(charts());
+      await tester.tap(find.textContaining('RIGHT NOW'));
       await tester.pumpAndSettle();
       expect(
         tester.widget<WeatherChart>(charts()).kind,
@@ -552,7 +552,17 @@ void main() {
       image.dispose();
     });
     await save('main-graphs-front');
-    await tester.tap(find.byKey(const ValueKey('flip-current')));
+    final strip = tester.widget<HourlyForecastStrip>(
+      find.byType(HourlyForecastStrip),
+    );
+    strip.onSelected!(strip.hours[2]);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('FORECAST ·'), findsOneWidget);
+    expect(find.byType(WeatherChart), findsOneWidget);
+    await save('main-selected-hour');
+    await tester.tap(find.text('Now'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('RIGHT NOW'));
     await tester.pumpAndSettle();
     await save('main-graphs-back');
     await tester.ensureVisible(find.byType(DailyForecastList));
