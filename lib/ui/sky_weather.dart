@@ -7,8 +7,13 @@ import '../sky.dart';
 class SkyPalette {
   const SkyPalette(this.background, this.card, this.deep);
   final Color background, card, deep;
-  factory SkyPalette.at(Settings settings, Forecast? forecast, DateTime now) {
-    final kind = conditionKind(forecast?.summary ?? '');
+  factory SkyPalette.at(
+    Settings settings,
+    Forecast? forecast,
+    DateTime now, {
+    String? summary,
+  }) {
+    final kind = conditionKind(summary ?? forecast?.summary ?? '');
     if (kind == 'rain' || kind == 'storm') {
       return const SkyPalette(
         Color(0xffe7e9ec),

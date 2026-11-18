@@ -3,6 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:local_weather/models.dart';
 import 'package:local_weather/ui/forecast_explorer.dart';
+import 'package:local_weather/ui/forecast_cards.dart';
+import 'package:local_weather/ui/weather_charts.dart';
+import 'package:local_weather/ui/flip_weather_card.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'compact_test.dart' show loadFonts;
 
@@ -17,6 +20,9 @@ void main() {
     observedAt: now,
     temperature: 4,
     summary: 'Clear',
+    wind: 11,
+    humidity: 55,
+    feelsLike: 2,
     days: const [],
     hours: [
       HourForecast(time: now, temperature: 4, summary: 'Clear', rain: 0),
@@ -33,10 +39,14 @@ void main() {
       ),
     ],
   );
+  late ForecastSelectionController selection;
+  setUp(() => selection = ForecastSelectionController());
+  tearDown(() => selection.dispose());
   Widget scene({
     bool compact = false,
     bool reduced = false,
     double scale = 1,
+    Settings settings = const Settings(),
   }) => MaterialApp(
     home: MediaQuery(
       data: MediaQueryData(
@@ -45,12 +55,25 @@ void main() {
       ),
       child: Scaffold(
         body: SingleChildScrollView(
-          child: ForecastExplorer(
-            key: const ValueKey('explorer'),
-            forecast: forecast,
-            settings: const Settings(),
-            now: now,
-            compact: compact,
+          child: Column(
+            children: [
+              CurrentWeatherCard(
+                key: const ValueKey('hero'),
+                forecast: forecast,
+                settings: settings,
+                now: now,
+                height: 300 * scale,
+                compact: compact,
+                selection: selection,
+              ),
+              ForecastExplorer(
+                forecast: forecast,
+                settings: settings,
+                now: now,
+                compact: compact,
+                selection: selection,
+              ),
+            ],
           ),
         ),
       ),
@@ -58,51 +81,98 @@ void main() {
   );
 
   testWidgets(
-    'real-hour selection preserves missing rain and survives layout change',
+    'one hero transforms into a real hour; missing metrics stay unavailable; Now resets',
     (tester) async {
       await tester.pumpWidget(scene());
-      expect(find.text('4° · 0% rain'), findsOneWidget);
-      await tester.tap(find.byTooltip('Later forecast hour'));
-      await tester.pump();
-      expect(find.text('6° · Rain chance unavailable'), findsOneWidget);
-      await tester.pumpWidget(scene(compact: true, reduced: true));
-      await tester.pump();
-      expect(find.text('6° · Rain chance unavailable'), findsOneWidget);
-      await tester.tap(find.byTooltip('Later forecast hour'));
-      await tester.pump();
-      expect(find.text('9° · 80% rain'), findsOneWidget);
-      final next = tester.widget<IconButton>(
-        find.widgetWithIcon(IconButton, Icons.chevron_right),
+      expect(find.byType(WeatherChart), findsOneWidget);
+      expect(find.textContaining('RIGHT NOW'), findsOneWidget);
+      final currentSky =
+          tester
+              .widget<FlipWeatherCard>(find.byType(FlipWeatherCard))
+              .background;
+      await tester.tap(
+        find.byKey(
+          ValueKey('hour-pip-${forecast.hours[1].time.toIso8601String()}'),
+        ),
       );
-      expect(next.onPressed, isNull);
+      await tester.pumpAndSettle();
+      expect(find.textContaining('FORECAST ·'), findsOneWidget);
+      expect(find.text('— rain chance'), findsOneWidget);
+      expect(
+        tester.widget<FlipWeatherCard>(find.byType(FlipWeatherCard)).background,
+        isNot(currentSky),
+      );
+      final hero = find.byKey(const ValueKey('hero'));
+      expect(
+        find.descendant(of: hero, matching: find.text('6°')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: hero, matching: find.text('Cloudy')),
+        findsOneWidget,
+      );
+      expect(find.byType(WeatherChart), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('forecast-explorer-chart')),
+        findsNothing,
+      );
+      // Flip from the header, not the interactive chart.
+      await tester.tap(find.textContaining('FORECAST ·'));
+      await tester.pumpAndSettle();
+      expect(find.byType(WeatherChart), findsOneWidget);
+      expect(find.text('Not reported'), findsNWidgets(2));
+      expect(find.text('Feels like'), findsNothing);
+      expect(find.text('11 km/h'), findsNothing);
+      await tester.tap(find.text('Now'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('RIGHT NOW'), findsOneWidget);
+      expect(find.text('11 km/h'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'original chart scrub and keyboard synchronize the strip, preserve gaps and fold state',
+    (tester) async {
+      await tester.pumpWidget(scene());
+      final chart = find.byKey(const ValueKey('hero-temperature-chart'));
+      await tester.drag(chart, const Offset(400, 0));
+      await tester.pumpAndSettle();
+      expect(selection.time, forecast.hours.last.time);
+      Focus.of(tester.element(chart)).requestFocus();
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+      await tester.pumpAndSettle();
+      expect(selection.time, forecast.hours[1].time);
+      await tester.pumpWidget(scene(compact: true, reduced: true));
+      expect(find.text('— rain chance'), findsOneWidget);
+      expect(find.byType(WeatherChart), findsOneWidget);
+      await tester.pumpWidget(
+        scene(
+          settings: const Settings(
+            place: Place(
+              name: 'Other',
+              latitude: 20,
+              longitude: 20,
+              country: '',
+              timezone: 'UTC',
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.textContaining('RIGHT NOW'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
 
-  testWidgets('chart scrub and keyboard choose actual samples across a gap', (
-    tester,
-  ) async {
-    await tester.pumpWidget(scene());
-    final chart = find.byKey(const ValueKey('forecast-explorer-chart'));
-    await tester.drag(chart, const Offset(400, 0));
-    await tester.pump();
-    expect(find.text('9° · 80% rain'), findsOneWidget);
-    Focus.of(tester.element(chart)).requestFocus();
-    await tester.pump();
-    await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
-    await tester.pump();
-    expect(find.text('6° · Rain chance unavailable'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
-
   testWidgets(
-    'compact large-text exploration remains scrollable and free of overflow',
+    'compact large text remains scrollable without adding a second plot',
     (tester) async {
       await tester.binding.setSurfaceSize(const Size(320, 360));
       addTearDown(() => tester.binding.setSurfaceSize(null));
       await tester.pumpWidget(scene(compact: true, reduced: true, scale: 2.5));
-      await tester.pump();
-      expect(find.text('4° · 0% rain'), findsOneWidget);
+      await tester.pumpAndSettle();
+      expect(find.byType(WeatherChart), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );

@@ -81,12 +81,13 @@ class WeatherChart extends StatelessWidget {
         void select(double x) {
           final start = range?.start ?? hours.first.time;
           final end = range?.end ?? hours.last.time;
-          final textScale = MediaQuery.textScalerOf(context).scale(1).clamp(1, 1.5);
+          final textScale = MediaQuery.textScalerOf(
+            context,
+          ).scale(1).clamp(1, 1.5);
           final left = precipitation ? 29.0 * textScale : 3.0;
-          final fraction = ((x - left) / math.max(1, bounds.maxWidth - left - 4)).clamp(
-            0.0,
-            1.0,
-          );
+          final fraction = ((x - left) /
+                  math.max(1, bounds.maxWidth - left - 4))
+              .clamp(0.0, 1.0);
           final requested = start.add(
             Duration(
               milliseconds:
@@ -363,7 +364,11 @@ class TemperatureRangeChart extends StatelessWidget {
     required this.settings,
     this.dark = false,
     this.range,
+    this.selectedTime,
+    this.onSelected,
   });
+  final DateTime? selectedTime;
+  final ValueChanged<HourForecast>? onSelected;
   final List<HourForecast> hours;
   final Settings settings;
   final bool dark;
@@ -416,6 +421,9 @@ class TemperatureRangeChart extends StatelessWidget {
         const SizedBox(width: 5),
         Expanded(
           child: WeatherChart(
+            key: const ValueKey('hero-temperature-chart'),
+            selectedTime: selectedTime,
+            onSelected: onSelected,
             hours: hours,
             settings: settings,
             kind: WeatherChartKind.temperature,

@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:home_widget/home_widget.dart';
+import 'interaction_juice.dart';
 import '../background.dart';
 import 'package:intl/intl.dart';
 
@@ -31,6 +32,7 @@ class WeatherScreen extends StatefulWidget {
 class _WeatherScreenState extends State<WeatherScreen> {
   WeatherController get controller => widget.controller;
   late final Timer skyTimer;
+  final hourSelection = ForecastSelectionController();
   @override
   void initState() {
     super.initState();
@@ -42,6 +44,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
   @override
   void dispose() {
     skyTimer.cancel();
+    hourSelection.dispose();
     super.dispose();
   }
 
@@ -93,6 +96,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                 return WarningEdges(
                   hazards: warningEdges(f?.alerts ?? [], now),
                   child: CompactWeatherView(
+                    selection: hourSelection,
                     controller: controller,
                     onPlaces: () => _places(context),
                     onSettings: () => _settings(context),
@@ -152,13 +156,13 @@ class _WeatherScreenState extends State<WeatherScreen> {
                                       ),
                                     )
                                   else
-                                    IconButton(
+                                    WeatherActionButton(
                                       tooltip: 'Refresh forecast',
                                       onPressed:
                                           () => controller.refresh(force: true),
                                       icon: const Icon(Icons.refresh, size: 22),
                                     ),
-                                  IconButton(
+                                  WeatherActionButton(
                                     tooltip: 'Weather settings',
                                     onPressed: () => _settings(context),
                                     icon: const Icon(Icons.tune, size: 22),
@@ -226,6 +230,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                                       ),
                                       forecast: f,
                                       child: CurrentWeatherCard(
+                                        selection: hourSelection,
                                         forecast: f,
                                         settings: s,
                                         now: now,
@@ -282,6 +287,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                                       )
                                     else
                                       ForecastExplorer(
+                                        selection: hourSelection,
                                         key: ValueKey(
                                           'card-hours-${s.place.id}',
                                         ),

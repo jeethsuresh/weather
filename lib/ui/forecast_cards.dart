@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
+import 'forecast_selection.dart';
+import 'interaction_juice.dart';
 import '../models.dart';
 import '../sky.dart';
 import 'sky_weather.dart';
@@ -10,7 +13,7 @@ import 'weather_style.dart';
 
 const _paper = Color(0xffe8f2fc);
 
-class CurrentWeatherCard extends StatelessWidget {
+class CurrentWeatherCard extends StatefulWidget {
   const CurrentWeatherCard({
     super.key,
     required this.forecast,
@@ -18,43 +21,136 @@ class CurrentWeatherCard extends StatelessWidget {
     required this.now,
     required this.height,
     this.compact = false,
+    this.selection,
   });
   final Forecast forecast;
   final Settings settings;
   final DateTime now;
   final double height;
   final bool compact;
+  final ForecastSelectionController? selection;
+  @override
+  State<CurrentWeatherCard> createState() => _CurrentWeatherCardState();
+}
+
+class _StepHour extends Intent {
+  const _StepHour(this.delta);
+  final int delta;
+}
+
+class _CurrentWeatherCardState extends State<CurrentWeatherCard> {
+  final ownSelection = ForecastSelectionController();
+  @override
+  void dispose() {
+    ownSelection.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final controller = widget.selection ?? ownSelection;
+    final forecast = widget.forecast,
+        settings = widget.settings,
+        now = widget.now;
     final range = upcomingChartRange(now);
     final hours = range.hoursFrom(forecast);
-    return FlipWeatherCard(
-      id: 'current',
-      storageId: '${settings.place.id}-${forecast.source.name}-current',
-      title:
-          '${forecast.source == WeatherSource.nws ? 'CURRENT FORECAST' : 'RIGHT NOW'} · °${settings.fahrenheit ? 'F' : 'C'} · NEXT 24H',
-      light: true,
-      background: SkyPalette.at(settings, forecast, now).card,
-      height: height,
-      front: _CurrentFront(
-        forecast: forecast,
-        settings: settings,
-        hours: hours,
-        range: range,
-        compact: compact,
-        now: now,
-      ),
-      back: _PrecipitationBack(
-        hours: hours,
-        range: range,
-        settings: settings,
-        probabilityValue: hours.firstOrNull?.rain,
-        metrics: [
-          CardMetric('Wind', settings.wind(forecast.wind)),
-          CardMetric('Humidity', probability(forecast.humidity)),
-          CardMetric('Feels like', settings.temperature(forecast.feelsLike)),
-        ],
-      ),
+    final identity = forecastSelectionIdentity(settings, forecast);
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) {
+        final selected = controller.selected(identity, hours);
+        final time = selected?.time ?? now;
+        void choose(HourForecast hour) => controller.choose(identity, hour);
+        void step(int delta) {
+          if (hours.isEmpty) return;
+          final index =
+              selected == null ? (delta > 0 ? -1 : 0) : hours.indexOf(selected);
+          choose(hours[(index + delta).clamp(0, hours.length - 1)]);
+        }
+
+        return FocusableActionDetector(
+          shortcuts: const {
+            SingleActivator(LogicalKeyboardKey.arrowLeft): _StepHour(-1),
+            SingleActivator(LogicalKeyboardKey.arrowRight): _StepHour(1),
+          },
+          actions: {
+            _StepHour: CallbackAction<_StepHour>(
+              onInvoke: (intent) {
+                step(intent.delta);
+                return null;
+              },
+            ),
+          },
+          child: FlipWeatherCard(
+            id: 'current',
+            storageId: '${settings.place.id}-${forecast.source.name}-current',
+            title:
+                selected == null
+                    ? '${forecast.source == WeatherSource.nws ? 'CURRENT FORECAST' : 'RIGHT NOW'} · °${settings.fahrenheit ? 'F' : 'C'}'
+                    : 'FORECAST · ${DateFormat('EEE h:mm a').format(settings.place.local(time))} ${settings.place.local(time).timeZoneName}',
+            headerAction:
+                selected == null
+                    ? null
+                    : TextButton(
+                      onPressed: controller.showNow,
+                      style: TextButton.styleFrom(
+                        foregroundColor: ink,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        minimumSize: const Size(44, 36),
+                      ),
+                      child: const Text('Now'),
+                    ),
+            light: true,
+            background:
+                SkyPalette.at(
+                  settings,
+                  forecast,
+                  time,
+                  summary: selected?.summary,
+                ).card,
+            height: widget.height,
+            front: _CurrentFront(
+              forecast: forecast,
+              settings: settings,
+              hours: hours,
+              range: range,
+              compact: widget.compact,
+              now: time,
+              selected: selected,
+              signal: controller.signal,
+              onSelected: choose,
+            ),
+            back: _PrecipitationBack(
+              hours: hours,
+              range: range,
+              settings: settings,
+              selectedTime: selected?.time,
+              onSelected: choose,
+              probabilityValue:
+                  selected == null ? hours.firstOrNull?.rain : selected.rain,
+              metrics: [
+                CardMetric(
+                  'Wind',
+                  settings.wind(
+                    selected == null ? forecast.wind : selected.wind,
+                  ),
+                ),
+                CardMetric(
+                  'Humidity',
+                  probability(
+                    selected == null ? forecast.humidity : selected.humidity,
+                  ),
+                ),
+                if (selected == null)
+                  CardMetric(
+                    'Feels like',
+                    settings.temperature(forecast.feelsLike),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -102,19 +198,28 @@ class HourlyForecastStrip extends StatelessWidget {
             (_, i) => Semantics(
               selected: selectedTime == hours[i].time,
               button: onSelected != null,
-              child: InkWell(
-                onTap: onSelected == null ? null : () => onSelected!(hours[i]),
-                child: _HourPip(
-                  key: ValueKey('hour-pip-${hours[i].time.toIso8601String()}'),
-                  hour: hours[i],
-                  settings: settings,
-                  first:
-                      selectedTime == null
-                          ? i == 0
-                          : selectedTime == hours[i].time,
-                  dark: compact,
-                  width: 60 * scale.clamp(1, 1.8),
-                ),
+              child: ElasticInteraction(
+                enabled: onSelected != null,
+                builder:
+                    (context, pose) => InkWell(
+                      onTap:
+                          onSelected == null
+                              ? null
+                              : () => onSelected!(hours[i]),
+                      child: _HourPip(
+                        key: ValueKey(
+                          'hour-pip-${hours[i].time.toIso8601String()}',
+                        ),
+                        hour: hours[i],
+                        settings: settings,
+                        first:
+                            selectedTime == null
+                                ? i == 0
+                                : selectedTime == hours[i].time,
+                        dark: compact,
+                        width: 60 * scale.clamp(1, 1.8),
+                      ),
+                    ),
               ),
             ),
       ),
@@ -265,7 +370,13 @@ class _CurrentFront extends StatelessWidget {
     required this.range,
     required this.compact,
     required this.now,
+    this.selected,
+    required this.signal,
+    required this.onSelected,
   });
+  final HourForecast? selected;
+  final int signal;
+  final ValueChanged<HourForecast> onSelected;
   final Forecast forecast;
   final Settings settings;
   final List<HourForecast> hours;
@@ -287,7 +398,13 @@ class _CurrentFront extends StatelessWidget {
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    settings.temperature(forecast.temperature),
+                    settings.temperature(
+                      selected == null
+                          ? forecast.temperature
+                          : selected!.temperature.isFinite
+                          ? selected!.temperature
+                          : null,
+                    ),
                     style: TextStyle(
                       color: ink,
                       fontSize: compact ? 72 : 98,
@@ -301,26 +418,41 @@ class _CurrentFront extends StatelessWidget {
               Flexible(
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
-                  child:
-                      SolarDay.at(settings.place, now, forecast).nightAt(now) &&
-                              conditionKind(forecast.summary) == 'sun'
-                          ? MoonDisc(
-                            phase: moonPhase(now),
-                            southern: settings.place.latitude < 0,
-                            size: compact ? 42 : 72,
-                          )
-                          : Icon(
-                            weatherIcon(forecast.summary),
-                            size: compact ? 42 : 72,
-                            color: const Color(0xff387da9),
-                          ),
+                  child: ElasticArt(
+                    gain: 2,
+                    child: ElasticPulse(
+                      signal: signal,
+                      child:
+                          SolarDay.at(
+                                    settings.place,
+                                    now,
+                                    forecast,
+                                  ).nightAt(now) &&
+                                  conditionKind(
+                                        selected?.summary ?? forecast.summary,
+                                      ) ==
+                                      'sun'
+                              ? MoonDisc(
+                                phase: moonPhase(now),
+                                southern: settings.place.latitude < 0,
+                                size: compact ? 42 : 72,
+                              )
+                              : Icon(
+                                weatherIcon(
+                                  selected?.summary ?? forecast.summary,
+                                ),
+                                size: compact ? 42 : 72,
+                                color: const Color(0xff387da9),
+                              ),
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
         ),
         Text(
-          forecast.summary,
+          selected?.summary ?? forecast.summary,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
@@ -329,15 +461,19 @@ class _CurrentFront extends StatelessWidget {
             fontWeight: FontWeight.w500,
           ),
         ),
-        if (!compact)
+        if (!compact || selected != null)
           Text(
-            '${forecast.source == WeatherSource.nws ? 'Forecast for' : 'Observed at'} ${DateFormat('h:mm a').format(settings.place.local(forecast.observedAt))}',
+            selected != null
+                ? '${probability(selected!.rain)} rain chance'
+                : '${forecast.source == WeatherSource.nws ? 'Forecast for' : 'Observed at'} ${DateFormat('h:mm a').format(settings.place.local(forecast.observedAt))}',
             style: const TextStyle(color: muted, fontSize: 11),
           ),
         const SizedBox(height: 3),
         SizedBox(
           height: (compact ? 44 : 76) * scale,
           child: TemperatureRangeChart(
+            selectedTime: selected?.time,
+            onSelected: onSelected,
             hours: hours,
             range: range,
             settings: settings,
@@ -360,7 +496,11 @@ class _PrecipitationBack extends StatelessWidget {
     required this.metrics,
     this.range,
     this.probabilityValue,
+    this.selectedTime,
+    this.onSelected,
   });
+  final DateTime? selectedTime;
+  final ValueChanged<HourForecast>? onSelected;
   final List<HourForecast> hours;
   final ForecastChartRange? range;
   final Settings settings;
@@ -405,6 +545,8 @@ class _PrecipitationBack extends StatelessWidget {
         Expanded(
           child: WeatherChart(
             key: const ValueKey('precipitation-graph'),
+            selectedTime: selectedTime,
+            onSelected: onSelected,
             hours: hours,
             range: range,
             settings: settings,
@@ -496,11 +638,25 @@ class _HourPip extends StatelessWidget {
               ).format(settings.place.local(hour.time)).toLowerCase(),
               style: TextStyle(fontSize: 11, color: secondary),
             ),
-            Icon(
-              weatherIcon(hour.summary),
-              size: 20,
-              color:
-                  lightText ? const Color(0xffffcb88) : const Color(0xffc29154),
+            ElasticArt(
+              child:
+                  SolarDay.at(settings.place, hour.time).nightAt(hour.time) &&
+                          conditionKind(hour.summary) == 'sun'
+                      ? ExcludeSemantics(
+                        child: MoonDisc(
+                          phase: moonPhase(hour.time),
+                          southern: settings.place.latitude < 0,
+                          size: 20,
+                        ),
+                      )
+                      : Icon(
+                        weatherIcon(hour.summary),
+                        size: 20,
+                        color:
+                            lightText
+                                ? const Color(0xffffcb88)
+                                : const Color(0xffc29154),
+                      ),
             ),
             FittedBox(
               fit: BoxFit.scaleDown,

@@ -5,15 +5,14 @@
   "name": "Daybreak",
   "directory": ".",
   "engine": "flutter",
-  "version": "1.6.0",
-  "versionCode": 1600,
+  "version": "1.7.0",
+  "versionCode": 1700,
   "entries": {
     "macos": "Daybreak.app"
   },
   "changes": [
-    "Explore the next 24 hours by dragging the forecast or choosing an hour, with matching temperature and rain readings.",
-    "Keep your chosen forecast hour when switching between compact and full layouts, with keyboard controls and clearer compact labels.",
-    "Turning on reduced motion immediately settles an active forecast-card flip.",
-    "Changed readings from newer forecasts receive a brief outline; the current city is easier to identify."
+    "Explore future hours directly in the main weather card: the temperature, sky and rain details follow the original graph or hour strip.",
+    "Removed the duplicate forecast graph, detached readout and repeated flip prompts.",
+    "Weather controls respond to press and release with elastic motion that respects reduced motion and leaves readings clear."
   ]
 }
