@@ -238,7 +238,11 @@ void main() {
       }
 
       await show('Clear');
-      expect(find.byType(MoonDisc), findsNWidgets(2));
+      expect(find.byType(MoonDisc), findsOneWidget);
+      expect(
+        find.textContaining(moonPhaseName(moonPhase(night))),
+        findsNothing,
+      );
       expect(find.textContaining('Sunrise'), findsOneWidget);
       expect(find.textContaining('Sunset'), findsOneWidget);
       await show('Cloudy');
