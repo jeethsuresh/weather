@@ -28,6 +28,12 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+          cache: gradle
+          cache-dependency-path: |
+            android/**/*.gradle*
+            android/gradle.properties
+            pubspec.lock
+            tool/ci/*.gradle
       - uses: android-actions/setup-android@v3
         with:
           packages: 'platform-tools platforms;android-36 build-tools;35.0.0 ndk;27.0.12077973'
@@ -35,4 +41,4 @@ jobs:
         run: flutter --no-version-check build apk --debug --no-pub --target-platform android-arm64
       - name: Test native widget graph
         working-directory: android
-        run: ./gradlew :app:testDebugUnitTest
+        run: ./gradlew --init-script ../tool/ci/robolectric-mirror.init.gradle :app:testDebugUnitTest
