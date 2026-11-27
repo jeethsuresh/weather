@@ -27,7 +27,7 @@ concurrency:
 
 jobs:
   plan:
-    runs-on: ubuntu-24.04
+    runs-on: gravitas-linux
     outputs:
       publish: ${{ steps.release.outputs.publish }}
     steps:
@@ -124,7 +124,7 @@ jobs:
   publish:
     if: github.ref == 'refs/heads/main' && github.repository == 'jeethsuresh/weather'
     needs: sign
-    runs-on: ubuntu-24.04
+    runs-on: gravitas-linux
     permissions:
       contents: write
     steps:
