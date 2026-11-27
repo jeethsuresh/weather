@@ -1,0 +1,21 @@
+// Use Google's documented Central mirror for test-only Robolectric artifacts.
+// Other dependencies and their version constraints retain the normal repositories.
+allprojects { project ->
+    project.pluginManager.withPlugin('com.android.application') {
+        project.repositories {
+            exclusiveContent {
+                forRepository {
+                    maven {
+                        name = 'robolectricCentralMirror'
+                        url = uri('https://maven-central.storage-download.googleapis.com/maven2/')
+                    }
+                }
+                filter { includeGroup('org.robolectric') }
+            }
+        }
+        project.tasks.withType(org.gradle.api.tasks.testing.Test).configureEach {
+            systemProperty('robolectric.dependency.repo.url',
+                'https://maven-central.storage-download.googleapis.com/maven2/')
+        }
+    }
+}
